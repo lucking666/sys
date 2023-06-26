@@ -1,4 +1,3 @@
-
 import copy
 import numpy as np
 import pandas as pd
@@ -43,7 +42,7 @@ def add_em(X, Y,flag,x_test,Y_test):
     # print('w:',W)
     # print('b',b)
 
-    while i<20:# dis>1e-10
+    while i<30:# dis>1e-10
 
         # print(i)
         X_dataframe = pd.DataFrame(X, columns=['F2', 'F3', 'F5', 'F6', 'F9', 'cyclelife', 'class', 'xita'])
@@ -57,9 +56,7 @@ def add_em(X, Y,flag,x_test,Y_test):
             lamuda.append(1/_std)
         #将标准差进行标准化
         for c in range(len(lamuda)):
-            lamuda[c] =(lamuda[c] / np.sum(lamuda))
-            # lamuda[c] =np.sqrt (lamuda[c] / np.sum(lamuda))
-            # lamuda[c] = (lamuda[c]-min(lamuda) / max(lamuda)-min(lamuda))*10
+            lamuda[c] = lamuda[c] / np.sum(lamuda)
 
         for index in range(3):
             #对数据集加权
@@ -122,8 +119,8 @@ N_train.append(round(40 * 0.9))
 # s = 100  # 分割数据的次数（对数据进行随机排序的次数）
 # m = 50  # 对于每次分割得到的训练集，生成m次噪声
 n = 20  # 最大噪声水平：times=19*0.05，noise_Y = times * standard_Y * np.random.randn(Y_train.shape[0], 1)
-s = 100      # 分割数据的次数（对数据进行随机排序的次数）
-m = 1 # 对于每次分割得到的训练集，生成m次噪声
+s = 20     # 分割数据的次数（对数据进行随机排序的次数）
+m = 1  # 对于每次分割得到的训练集，生成m次噪声
 
 med_tls_rmse = []
 med_ls_rmse = []
@@ -141,7 +138,7 @@ for j in range(n):  # 调整噪声大小
     times = []
     times.append(1* j)
     times.append(0.45 * j)
-    times.append(0.05* j)
+    times.append(0.2* j)
 
     # times=[]
     # times.append(random.randint(0, 1) * j )
@@ -262,10 +259,17 @@ for j in range(n):  # 调整噪声大小
             tls_rmse.append(rmse(Y_test, y_pred_tls))
             tls_em_rmse.append(rmse(Y_test, y_pred_tls_em))
 
+            # # 最小二乘
+            # W_ls, b_ls, = ls(x_train[:,0:5], Y_train_noise)
+            # W_ls_em, b_ls_em = add_em(x_train, Y_train_noise, 'ls',x_test,Y_test)
+            # y_pred_ls = np.dot(x_test, W_ls) + b_ls
+            # y_pred_ls_em = np.dot(x_test, W_ls_em) + b_ls_em
+            # ls_rmse.append(rmse(Y_test, y_pred_ls))
+            # ls_em_rmse.append(rmse(Y_test, y_pred_ls_em))
 
-        print('此处结果是生成10次噪声的tls和tls_em的rmse：')
-        print('tls_rmse:',tls_rmse)
-        print('tls_em_rmse:', tls_em_rmse)
+        # print('此处结果是生成10次噪声的tls和tls_em的rmse：')
+        # print('tls_rmse:',tls_rmse)
+        # print('tls_em_rmse:', tls_em_rmse)
 
     #med_tls_rmse.append(np.median(tls_rmse))
     med_ls_em_rmse.append(np.median(ls_em_rmse))
@@ -277,11 +281,18 @@ for j in range(n):  # 调整噪声大小
 # 画图tls
 plt.plot(med_tls_em_rmse)
 plt.plot(med_tls_rmse)
-
 plt.legend([ 'TLS_EM','TLS']) #
 plt.xlabel('Noise Level')
 plt.ylabel('RMSE')
 plt.show()
+
+# # 画图ls
+# plt.plot(med_ls_em_rmse)
+# plt.plot(med_ls_rmse)
+# plt.legend(['LS_EM', 'LS']) #
+# plt.xlabel('Noise Level')
+# plt.ylabel('RMSE')
+# plt.show()
 
 # # 画图tls和ls
 # plt.plot(med_tls_rmse)
