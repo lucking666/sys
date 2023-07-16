@@ -42,7 +42,7 @@ def add_em(X, Y,flag,x_test,Y_test):
     # print('w:',W)
     # print('b',b)
 
-    while i<30:# dis>1e-10
+    while i<10:# dis>1e-10
 
         # print(i)
         X_dataframe = pd.DataFrame(X, columns=['F2', 'F3', 'F5', 'F6', 'F9', 'cyclelife', 'class', 'xita'])
@@ -51,12 +51,23 @@ def add_em(X, Y,flag,x_test,Y_test):
         # print('xita',xita)
         X_dataframe['xita']=xita
         lamuda=[]
+
+
         for index in range(3):
             _std = X_dataframe[X_dataframe['class'] == index]['xita'].std()
             lamuda.append(1/_std)
         #将标准差进行标准化
         for c in range(len(lamuda)):
             lamuda[c] = lamuda[c] / np.sum(lamuda)
+
+        # lamuday = []
+        # for index in range(3):
+        #     _std = X_dataframe[X_dataframe['class'] == index]['xita'].std()
+        #     lamuday.append(_std)
+        # #将标准差进行标准化
+        # for c in range(len(lamuday)):
+        #     lamuday[c] = lamuday[c] / np.sum(lamuday)
+
 
         for index in range(3):
             #对数据集加权
@@ -119,14 +130,15 @@ N_train.append(round(40 * 0.9))
 # s = 100  # 分割数据的次数（对数据进行随机排序的次数）
 # m = 50  # 对于每次分割得到的训练集，生成m次噪声
 n = 20  # 最大噪声水平：times=19*0.05，noise_Y = times * standard_Y * np.random.randn(Y_train.shape[0], 1)
-s = 20     # 分割数据的次数（对数据进行随机排序的次数）
-m = 1  # 对于每次分割得到的训练集，生成m次噪声
+s = 10     # 分割数据的次数（对数据进行随机排序的次数）
+m = 5  # 对于每次分割得到的训练集，生成m次噪声
 
 med_tls_rmse = []
 med_ls_rmse = []
 med_tls_em_rmse = []
 med_ls_em_rmse = []
 for j in range(n):  # 调整噪声大小
+    np.random.seed(j)
     print("noise_level:",j)
     tls_rmse = []
     ls_rmse = []
@@ -134,11 +146,14 @@ for j in range(n):  # 调整噪声大小
     ls_em_rmse = []
     copy_data = copy.deepcopy(data_x)
 
-    j=j*0.05
+    # times = []
+    # times.append(1* j*0.05)
+    # times.append(0.45 * j*0.05)
+    # times.append(0.2* j*0.05)
     times = []
-    times.append(1* j)
-    times.append(0.45 * j)
-    times.append(0.2* j)
+    times.append(0.09 * j * 0.05)
+    times.append(0.05 * j * 0.05)
+    times.append(0.2 * j * 0.05)
 
     # times=[]
     # times.append(random.randint(0, 1) * j )
@@ -150,7 +165,7 @@ for j in range(n):  # 调整噪声大小
 
     for p in range(s): # 分割数据
         # 划分训练集与测试集
-        np.random.seed(4)
+        np.random.seed(p)
         # random_datax = copy_data.reindex(np.random.permutation(copy_data.index))  # 随机排序
         random_datax=copy_data
 
@@ -194,7 +209,7 @@ for j in range(n):  # 调整噪声大小
 
 
         for k in range(m):  # 生成m次噪声
-
+            np.random.seed(k)
             X_train = copy.deepcopy(data_train_random)
             #Y_train = copy.deepcopy(data_train_random.iloc)
             X_test_random=X_test_random.iloc[:,0:5]
