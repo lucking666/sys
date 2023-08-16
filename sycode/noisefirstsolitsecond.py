@@ -26,17 +26,17 @@ def add_em(X, Y,flag,x_test,Y_test):
     Y_test=Y_test
     rmse_train = []
     rmse_test = []
-    # # 使用随机初始值
-    # W=np.random.RandomState().uniform(0, 10, (5, 1))
-    # b = np.random.RandomState().uniform(0, 10, (1, 1))
+    # 使用随机初始值
+    W=np.random.RandomState().uniform(0, 10, (5, 1))
+    b = np.random.RandomState().uniform(0, 10, (1, 1))
     # rd = np.random.RandomState()
-    # 随机浮点数
+    # # 随机浮点数
     # W = rd.random((5, 1))
     # b = rd.random((1, 1))
 
-    # # 使用固定初始值
-    W = np.ones((5, 1))
-    b = [[1]]
+    # 使用固定初始值
+    # W = np.ones((5, 1))
+    # b = [[1]]
     i = 0
     dis=1111
     # print('w:',W)
@@ -48,18 +48,26 @@ def add_em(X, Y,flag,x_test,Y_test):
         X_dataframe = pd.DataFrame(X, columns=['F2', 'F3', 'F5', 'F6', 'F9', 'cyclelife', 'class', 'xita'])
         Y_predict = np.dot(X[:, 0:5], W) + b
         xita =Y-Y_predict
-        # print("Y[9]",Y)
-        # print("Y_predict[9]",Y_predict)
-
-        print('xita',xita[N_train[1] + N_train[0]:])
+        # print('xita',xita)
         X_dataframe['xita']=xita
         lamuda=[]
+
+
         for index in range(3):
             _std = X_dataframe[X_dataframe['class'] == index]['xita'].std()
             lamuda.append(1/_std)
-        # 将标准差进行标准化
+        #将标准差进行标准化
         for c in range(len(lamuda)):
             lamuda[c] = lamuda[c] / np.sum(lamuda)
+
+        # lamuday = []
+        # for index in range(3):
+        #     _std = X_dataframe[X_dataframe['class'] == index]['xita'].std()
+        #     lamuday.append(_std)
+        # #将标准差进行标准化
+        # for c in range(len(lamuday)):
+        #     lamuday[c] = lamuday[c] / np.sum(lamuday)
+
 
         for index in range(3):
             #对数据集加权
@@ -85,8 +93,8 @@ def add_em(X, Y,flag,x_test,Y_test):
         rmse_test.append(rmse(Y_test, np.dot(X_test, W) + b))
         # xxx=rmse(Y_test, y_pred_tls_em)
         # print("rmse is :",s)
-        i += 1
-
+    #     i += 1
+    #
     # plt.plot(rmse_train)
     # plt.plot(rmse_test)
     # plt.legend(['train', 'test'])  #
@@ -122,9 +130,9 @@ N_train.append(round(40 * 0.9))
 # s = 100  # 分割数据的次数（对数据进行随机排序的次数）
 # m = 50  # 对于每次分割得到的训练集，生成m次噪声
 n = 20  # 最大噪声水平：times=19*0.05，noise_Y = times * standard_Y * np.random.randn(Y_train.shape[0], 1)
-s = 10    # 分割数据的次数（对数据进行随机排序的次数）
-m = 10  # 对于每次分割得到的训练集，生成m次噪声
-w = 5  #5轮噪声比例
+s = 8     # 分割数据的次数（对数据进行随机排序的次数）
+m = 2  # 对于每次分割得到的训练集，生成m次噪声
+w = 1  #5轮噪声比例
 
 med_tls_rmse = []
 med_ls_rmse = []
@@ -139,26 +147,22 @@ for j in range(n):  # 调整噪声大小
     ls_em_rmse = []
     copy_data = copy.deepcopy(data_x)
 
+    #多轮随机噪声
     for x in range(w):
-        # times = []
-        # times.append(1 * j * 0.05)
-        # times.append(0.45 * j * 0.05)
-        # times.append(0.2 * j * 0.05)
+        times = []
+        times.append(1* j*0.05)
+        times.append(0.45 * j*0.05)
+        times.append(0.2* j*0.05)
         # times = []
         # times.append(0.5 * j * 0.05)
         # times.append(0.07 * j * 0.05)
         # times.append(0.1 * j * 0.05)
-        np.random.seed(x)
-        times = [random.uniform(0.2, 2) for _ in range(3)]
-        print(times)
-        times[0] = (times[0] * j * 0.05)
-        times[1] = (times[1] * j * 0.05)
-        times[2] = (times[2] * j * 0.05)
-
-        # times=[]
-        # times.append(random.randint(0, 1) * j )
-        # times.append(random.randint(0, 1) * j )
-        # times.append(random.randint(0, 1) * j )
+        # np.random.seed(x)
+        # times = np.random.rand(3)
+        # print(times)
+        # times[0] = (times[0] * j * 0.05)
+        # times[1] = (times[1] * j * 0.05)
+        # times[2] = (times[2] * j * 0.05)
 
         # print('j:',j)
         # print('times[]=:', times)
@@ -170,12 +174,12 @@ for j in range(n):  # 调整噪声大小
             random_datax = copy_data
 
             # 按照每个电池批次进行划分之后再合并
-            # X_data_1 = shuffle(random_datax.iloc[:41, :])
-            # X_data_2 = shuffle(random_datax.iloc[41:84, :])
-            # X_data_3 = shuffle(random_datax.iloc[84:, :])
-            X_data_1 = random_datax.iloc[:41, :]
-            X_data_2 = random_datax.iloc[41:84, :]
-            X_data_3 = random_datax.iloc[84:, :]
+            X_data_1 = shuffle(random_datax.iloc[:41, :])
+            X_data_2 = shuffle(random_datax.iloc[41:84, :])
+            X_data_3 = shuffle(random_datax.iloc[84:, :])
+            # X_data_1 = random_datax.iloc[:41, :]
+            # X_data_2 = random_datax.iloc[41:84, :]
+            # X_data_3 = random_datax.iloc[84:, :]
             X_train1 = X_data_1.iloc[:N_train[0], :]
             X_test1 = X_data_1.iloc[N_train[0]:, :]
             X_train2 = X_data_2.iloc[:N_train[1], :]
@@ -186,10 +190,10 @@ for j in range(n):  # 调整噪声大小
             data_train_random = pd.concat([pd.concat([X_train1, X_train2]), X_train3])
             X_test_random = pd.concat([pd.concat([X_test1, X_test2]), X_test3])
 
+            # print("X_train:----------------------------------------", data_train_random)
+
             data_train_random['cyclelife'] = np.log10(np.array(data_train_random['cyclelife']))  # dataframe
             X_test_random['cyclelife'] = np.log10(np.array(X_test_random['cyclelife']))  # dataframe
-
-            print('data_train_random:', data_train_random)
             # print('data_train_random is :',data_train_random )
             # print('X_test_random is :',X_test_random)
             Y_test_random = np.array(X_test_random['cyclelife']).reshape(-1, 1)
@@ -208,10 +212,8 @@ for j in range(n):  # 调整噪声大小
             # print(data_train_random)
 
             for k in range(m):  # 生成m次噪声
-
-                np.random.seed(k)
-
-                X_train = copy.deepcopy(data_train_random)
+                # np.random.seed(k)
+                X_train = copy.deepcopy(copy_data)
                 # Y_train = copy.deepcopy(data_train_random.iloc)
                 X_test_random = X_test_random.iloc[:, 0:5]
                 X_test = copy.deepcopy(X_test_random)  # dataframe
@@ -221,17 +223,15 @@ for j in range(n):  # 调整噪声大小
                 standard_X = np.std(X_train, axis=0)  # .reshape(-1, 1)
                 # standard_Y = np.std(Y_train, axis=0)#.reshape(-1, 1)
 
-                length0 = len(X_train[X_train['class'] == 0])
-                length1 = len(X_train[X_train['class'] == 1])
-                length2 = len(X_train[X_train['class'] == 2])
+                length0 = len(X_train[X_train['class'] == 0])*0.9
+                length1 = len(X_train[X_train['class'] == 1])*0.9
+                length2 = len(X_train[X_train['class'] == 2])*0.9
                 noise_X0 = np.random.normal(loc=0, scale=times[0], size=(length0, 6))
                 noise_X1 = np.random.normal(loc=0, scale=times[1], size=(length1, 6))
                 noise_X2 = np.random.normal(loc=0, scale=times[2], size=(length2, 6))
 
                 noise_X = np.concatenate((np.concatenate((noise_X0, noise_X1), axis=0), noise_X2), axis=0)
                 # print('noise_X is :',noise_X)
-                print('noise_X is :', noise_X[0])
-                print('noise_X is :', noise_X[100])
 
                 X_train_noise = copy.deepcopy(X_train).values
                 # Y_train_noise=np.array(X_train_noise[:,5]).reshape(-1,1)
@@ -244,43 +244,45 @@ for j in range(n):  # 调整噪声大小
                     for i in range(6):
                         noise_X[:, i] *= (standard_X[i])  # 根据每个特征的标准差生成噪声
                         X_train_noise[:, i] += noise_X[:, i]
+                for p in range(s):
 
-                # 转换数据类型（前面使用DataFrame是因为之前要进行特征选择）
-                x_train = X_train_noise
-                Y_train_noise = np.array(X_train_noise[:, 5]).reshape(-1, 1)
-                x_test = X_test.values
+                    # 转换数据类型（前面使用DataFrame是因为之前要进行特征选择）
+                    x_train = X_train_noise
+                    Y_train_noise = np.array(X_train_noise[:, 5]).reshape(-1, 1)
+                    x_test = X_test.values
 
-                # print('X_train:',X_train)#dataframe,112*8
-                # print('Y_train_noise:', type(Y_train_noise))#array
-                # print('x_train:', x_train)#array,112*8
+                    # print('X_train:',X_train)#dataframe,112*8
+                    # print('Y_train_noise:', type(Y_train_noise))#array
+                    # print('x_train:', x_train)#array,112*8
 
-                # print('x_train is :',x_train)
-                # print('type x_train is:',type(x_train))
-                # print('Y_train_noise is :', Y_train_noise)
-                # print('type Y_train_noise is:', type(Y_train_noise))
-                # print('x_test is :', x_test)
-                # print('type x_test is:', type(x_test))
-                # print('Y_test is :', Y_test)
-                # print('type Y_test is:', type(Y_test))
+                    # print('x_train is :',x_train)
+                    # print('type x_train is:',type(x_train))
+                    # print('Y_train_noise is :', Y_train_noise)
+                    # print('type Y_train_noise is:', type(Y_train_noise))
+                    # print('x_test is :', x_test)
+                    # print('type x_test is:', type(x_test))
+                    # print('Y_test is :', Y_test)
+                    # print('type Y_test is:', type(Y_test))
 
-                # # # 总体最小二乘
-                # W_tls, b_tls, = tls(x_train[:,0:5], Y_train_noise)#x:array,y:array,(-1,1)
-                # W_tls_em,b_tls_em=add_em(x_train, Y_train_noise,'tls',x_test,Y_test)#x:array,y:array,(-1,1)
-                # y_pred_tls = np.dot(x_test, W_tls) + b_tls
-                # y_pred_tls_em = np.dot(x_test, W_tls_em) + b_tls_em
-                # tls_rmse.append(rmse(Y_test, y_pred_tls))
-                # tls_em_rmse.append(rmse(Y_test, y_pred_tls_em))
+                    # # 总体最小二乘
+                    W_tls, b_tls, = tls(x_train[:, 0:5], Y_train_noise)  # x:array,y:array,(-1,1)
+                    W_tls_em, b_tls_em = add_em(x_train, Y_train_noise, 'tls', x_test, Y_test)  # x:array,y:array,(-1,1)
+                    y_pred_tls = np.dot(x_test, W_tls) + b_tls
+                    y_pred_tls_em = np.dot(x_test, W_tls_em) + b_tls_em
+                    tls_rmse.append(rmse(Y_test, y_pred_tls))
+                    tls_em_rmse.append(rmse(Y_test, y_pred_tls_em))
 
-                print("x_train",x_train[0])
-                # 最小二乘
-                W_ls, b_ls, = ls(x_train[:, 0:5], Y_train_noise)
-                W_ls_em, b_ls_em = add_em(x_train, Y_train_noise, 'ls', x_test, Y_test)
-                y_pred_ls = np.dot(x_test, W_ls) + b_ls
-                y_pred_ls_em = np.dot(x_test, W_ls_em) + b_ls_em
-                print('ls_em rmse and ls rmse is:', rmse(Y_test, y_pred_ls_em), rmse(Y_test, y_pred_ls))
-                ls_rmse.append(rmse(Y_test, y_pred_ls))
-                ls_em_rmse.append(rmse(Y_test, y_pred_ls_em))
+                    # # 最小二乘
+                    # W_ls, b_ls, = ls(x_train[:,0:5], Y_train_noise)
+                    # W_ls_em, b_ls_em = add_em(x_train, Y_train_noise, 'ls',x_test,Y_test)
+                    # y_pred_ls = np.dot(x_test, W_ls) + b_ls
+                    # y_pred_ls_em = np.dot(x_test, W_ls_em) + b_ls_em
+                    # ls_rmse.append(rmse(Y_test, y_pred_ls))
+                    # ls_em_rmse.append(rmse(Y_test, y_pred_ls_em))
 
+            # print('此处结果是生成10次噪声的tls和tls_em的rmse：')
+            # print('tls_rmse:',tls_rmse)
+            # print('tls_em_rmse:', tls_em_rmse)
 
     # med_tls_rmse.append(np.median(tls_rmse))
     med_ls_em_rmse.append(np.median(ls_em_rmse))
@@ -289,25 +291,25 @@ for j in range(n):  # 调整噪声大小
     med_tls_rmse.append(np.median(tls_rmse))
 
 
-# # 画图tls
-# plt.plot(med_tls_em_rmse)
-# plt.plot(med_tls_rmse)
-# plt.legend([ 'TLS_EM','TLS']) #
-# plt.xlabel('Noise Level')
-# plt.ylabel('RMSE')
-# plt.show()
 
 
-
-# print('med_ls_em_rmse:',med_ls_em_rmse)
-# print('med_ls_rmse:',med_ls_rmse)
-# 画图ls
-plt.plot(med_ls_em_rmse)
-plt.plot(med_ls_rmse)
-plt.legend(['LS_EM', 'LS']) #
+# print('med_tls_em_rmse:',med_tls_em_rmse)
+# print('med_tls_rmse:',med_tls_rmse)
+# 画图tls
+plt.plot(med_tls_em_rmse)
+plt.plot(med_tls_rmse)
+plt.legend([ 'TLS_EM','TLS']) #
 plt.xlabel('Noise Level')
 plt.ylabel('RMSE')
 plt.show()
+
+# # 画图ls
+# plt.plot(med_ls_em_rmse)
+# plt.plot(med_ls_rmse)
+# plt.legend(['LS_EM', 'LS']) #
+# plt.xlabel('Noise Level')
+# plt.ylabel('RMSE')
+# plt.show()
 
 # # 画图tls和ls
 # plt.plot(med_tls_rmse)
