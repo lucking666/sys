@@ -161,8 +161,8 @@ for j in range(n):  # 调整噪声大小
 
         random.seed(x)
         times = [random.uniform(0, 0.5) for _ in range(3)]
-        # times[times.index(min(times))] = times[times.index(min(times))] * 0.5
-        # times[times.index(max(times))] = times[times.index(max(times))] * 5
+        times[times.index(min(times))] = times[times.index(min(times))] * 0.5
+        times[times.index(max(times))] = times[times.index(max(times))] * 5
         # print(times)
         times[0] = (times[0] * j * 0.05)
         times[1] = (times[1] * j * 0.05)
@@ -251,7 +251,7 @@ for j in range(n):  # 调整噪声大小
 
                 # # 总体最小二乘
                 W_tls, b_tls, = tls(x_train[:,0:5], Y_train_noise)#x:array,y:array,(-1,1)
-                W_tls_em,b_tls_em=add_em(x_train, Y_train_noise,'tls',x_test,Y_test)#x:array,y:array,(-1,1)
+                W_tls_em,b_tls_em=add_em(x_train, Y_train_noise,'tls',x_test,Y_test,W_tls, b_tls)#x:array,y:array,(-1,1)
                 y_pred_tls = np.dot(x_test, W_tls) + b_tls
                 y_pred_tls_em = np.dot(x_test, W_tls_em) + b_tls_em
                 tls_rmse.append(rmse(Y_test, y_pred_tls))

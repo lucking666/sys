@@ -89,7 +89,7 @@ def add_em(X, Y,flag,W0, b0):
         temp_rmse = rmse(Y, np.dot(X[:, 0:5], W_em) + b_em)
         temp_rmse_dis = rmse_train[-1] - temp_rmse
 
-        if(temp_rmse_dis<-100):
+        if(temp_rmse_dis<-60):
             break
         rmse_train.append(temp_rmse)
         dis=np.linalg.norm(W_em-W)
@@ -164,13 +164,13 @@ for j in range(n):  # 调整噪声大小
         # print("不同噪声比例：")
 
         random.seed(x)
-        times = [random.uniform(8, 10) for _ in range(3)]
-        # times[times.index(min(times))] =times[times.index(min(times))]*0.5
-        # times[times.index(max(times))] =times[times.index(max(times))]*5
-        times=[1,1,1]
-        times[0] = (times[0] * j * 0.05)
-        times[1] = (times[1] * j * 0.05)
-        times[2] = (times[2] * j * 0.05)
+        times = [random.uniform(0, 2) for _ in range(3)]
+        times[times.index(min(times))] =times[times.index(min(times))]*0.01
+        times[times.index(max(times))] =times[times.index(max(times))]*100
+        # times=[1,1,1]
+        times[0] = (times[0] * j )
+        times[1] = (times[1] * j )
+        times[2] = (times[2] * j )
         print(times)
 
         # times = []
