@@ -51,11 +51,11 @@ def add_em(X, Y,flag,x_test,Y_test,W0, b0):
     W = W0
     b = b0
     i = 0
-    # dis=1111
+    dis=1111
     # print('w:',W)
     # print('b',b)
 
-    while i<20:# dis>1e-10
+    while dis>1e-5:#i<20
 
         # print(i)
         xita=[]
@@ -91,7 +91,7 @@ def add_em(X, Y,flag,x_test,Y_test,W0, b0):
         if flag=='ls':
             W_em, b_em = ls(X_, Y_)
 
-        # dis=np.linalg.norm(W_em-W)
+        dis=np.linalg.norm(W_em-W)
         W, b = W_em, b_em
 
         #先查看迭代过程中的rmse
@@ -102,13 +102,13 @@ def add_em(X, Y,flag,x_test,Y_test,W0, b0):
         # print("rmse is :",s)
         i += 1
 
-    # print('rmse_train',rmse_train)
-    # plt.plot(rmse_train)
+    print('rmse_train',rmse_train)
+    plt.plot(rmse_train)
     # plt.plot(rmse_test)
-    # plt.legend(['train', 'test'])  #
-    # plt.xlabel('loop')
-    # plt.ylabel('RMSE+{}'.format(flag))
-    # plt.show()
+    plt.legend(['train'])  #
+    plt.xlabel('loop')
+    plt.ylabel('RMSE+{}'.format(flag))
+    plt.show()
 
     return W,b
 
@@ -139,9 +139,9 @@ N_train.append(round(40 * 0.9))
 # s = 100 # 分割数据的次数（对数据进行随机排序的次数）
 # m = 50  # 对于每次分割得到的训练集，生成m次噪声
 n = 20    # 最大噪声水平：times=19*0.05，noise_Y = times * standard_Y * np.random.randn(Y_train.shape[0], 1)
-s = 30   # 分割数据的次数（对数据进行随机排序的次数）
+s = 20   # 分割数据的次数（对数据进行随机排序的次数）
 m = 20    # 对于每次分割得到的训练集，生成m次噪声
-w = 10  #5轮噪声比例
+w = 20  #5轮噪声比例
 
 med_tls_rmse = []
 med_ls_rmse = []
@@ -150,6 +150,7 @@ med_ls_em_rmse = []
 for j in range(n):  # 调整噪声大小
     # np.random.seed(j)
     print("noise_level:",j)
+    # j=6
     tls_rmse = []
     ls_rmse = []
     tls_em_rmse = []
@@ -160,7 +161,7 @@ for j in range(n):  # 调整噪声大小
         # print("不同噪声比例：")
 
         random.seed(x)
-        times = [random.uniform(0, 0.5) for _ in range(3)]
+        times = [random.uniform(0, 1) for _ in range(3)]
         times[times.index(min(times))] = times[times.index(min(times))] * 0.5
         times[times.index(max(times))] = times[times.index(max(times))] * 5
         # print(times)
@@ -256,7 +257,7 @@ for j in range(n):  # 调整噪声大小
                 y_pred_tls_em = np.dot(x_test, W_tls_em) + b_tls_em
                 tls_rmse.append(rmse(Y_test, y_pred_tls))
                 tls_em_rmse.append(rmse(Y_test, y_pred_tls_em))
-                print('tls_em rmse and tls rmse is:',rmse(Y_test, y_pred_tls_em),rmse(Y_test, y_pred_tls))
+                # print('tls_em rmse and tls rmse is:',rmse(Y_test, y_pred_tls_em),rmse(Y_test, y_pred_tls))
 
                 # print("x_train",x_train[0])
                 # 最小二乘
@@ -276,12 +277,15 @@ for j in range(n):  # 调整噪声大小
     med_tls_rmse.append(np.median(tls_rmse))
 
 print('med_tls_rmse:',med_tls_rmse)
-print('med_tls_rmse:',med_ls_rmse)
+print('med_tls_rmse:',med_tls_em_rmse)
 # 画图tls
+# plt.xlim(0,5)
+# x = np.linspace(0, 5, 20)
+
 plt.plot(med_tls_em_rmse)
 plt.plot(med_tls_rmse)
 plt.legend([ 'TLS_EM','TLS']) #
-plt.xlabel('Noise Level')
+plt.xlabel('Noise(0~0.95)')
 plt.ylabel('RMSE')
 plt.show()
 

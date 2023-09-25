@@ -139,9 +139,9 @@ N_train.append(round(40 * 0.9))
 # s = 100 # 分割数据的次数（对数据进行随机排序的次数）
 # m = 50  # 对于每次分割得到的训练集，生成m次噪声
 n = 20    # 最大噪声水平：times=19*0.05，noise_Y = times * standard_Y * np.random.randn(Y_train.shape[0], 1)
-s = 30   # 分割数据的次数（对数据进行随机排序的次数）
+s = 20   # 分割数据的次数（对数据进行随机排序的次数）
 m = 20    # 对于每次分割得到的训练集，生成m次噪声
-w = 10  #5轮噪声比例
+w = 20  #5轮噪声比例
 
 med_tls_rmse = []
 med_ls_rmse = []
@@ -160,7 +160,7 @@ for j in range(n):  # 调整噪声大小
         # print("不同噪声比例：")
 
         random.seed(x)
-        times = [random.uniform(0, 0.5) for _ in range(3)]
+        times = [random.uniform(0, 1) for _ in range(3)]
         times[times.index(min(times))] = times[times.index(min(times))] * 0.5
         times[times.index(max(times))] = times[times.index(max(times))] * 5
         # print(times)
@@ -286,13 +286,15 @@ for j in range(n):  # 调整噪声大小
 
 
 
-# print('med_ls_em_rmse:',med_ls_em_rmse)
-# print('med_ls_rmse:',med_ls_rmse)
+print('med_ls_em_rmse:',med_ls_em_rmse)
+print('med_ls_rmse:',med_ls_rmse)
 # 画图ls
+# plt.xlim(0,5)
+# x = np.linspace(0, 5, 20)
 plt.plot(med_ls_em_rmse)
 plt.plot(med_ls_rmse)
 plt.legend(['LS_EM', 'LS']) #
-plt.xlabel('Noise Level')
+plt.xlabel('Noise(0~0.95)')
 plt.ylabel('RMSE')
 plt.show()
 
