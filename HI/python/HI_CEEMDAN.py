@@ -150,36 +150,57 @@ rmselistnoise=[]
 maelistnoiseemd=[]
 rmselistnoiseemd=[]
 for i in range(100):
-    mae,rmse=get_result(X_train, y_train, X_test, y_test)
+    Xtrain=X_train
+    Xtest=X_test
+    mae,rmse=get_result(Xtrain, y_train, Xtest, y_test)
     maelist.append(mae)
     rmselist.append(rmse)
-    std=random.uniform(0.01, 0.1)
-    X_train = add_noise(X_train, std)
-    maenoise, rmsenoise = get_result(X_train, y_train, X_test, y_test)
+    # std=random.uniform(0.01, 0.2)
+    std = 0.05
+    Xtrain = add_noise(Xtrain, std)
+    maenoise, rmsenoise = get_result(Xtrain, y_train, Xtest, y_test)
     maelistnoise.append(maenoise)
     rmselistnoise.append(rmsenoise)
-    X_train, X_test = ceemdan(X_train, X_test)
-    maenoiseemd, rmsenoiseemd = get_result(X_train, y_train, X_test, y_test)
+    Xtrain, Xtest = ceemdan(Xtrain, Xtest)
+    maenoiseemd, rmsenoiseemd = get_result(Xtrain, y_train, Xtest, y_test)
     maelistnoiseemd.append(maenoiseemd)
     rmselistnoiseemd.append(rmsenoiseemd)
 
 
-print('原始mae——{},rmse——{}'.format(statistics.median(maelist),statistics.median(rmselist)))
-print('加噪声mae——{},rmse——{}'.format(statistics.median(maelistnoise),statistics.median(rmselistnoise)))
-print('加噪声emmae——{},rmse——{}'.format(statistics.median(maelistnoiseemd),statistics.median(rmselistnoiseemd)))
+print('原始mae——{},rmse——{}'.format(np.mean(maelist), np.mean(rmselist)))
+print('加噪声mae——{},rmse——{}'.format(np.mean(maelistnoise), np.mean(rmselistnoise)))
+print('加噪声emmae——{},rmse——{}'.format(np.mean(maelistnoiseemd), np.mean(rmselistnoiseemd)))
 
-# 打乱顺序0.05的情况下，加噪声效果比不加噪声更好
-
-# 未打乱0.01
-# 原始mae——0.09321287883984354,rmse——0.11757049148043622
-# 加噪声mae——0.18300221611653977,rmse——0.1967197420166632
-# 加噪声emmae——0.10012698757376759,rmse——0.12342201344539722
-# 未打乱0.05
-# 原始mae——0.07361712070429227,rmse——0.10205014633622844
-# 加噪声mae——0.18285943231729127,rmse——0.20275682855821942
-# 加噪声emmae——0.07707713728832284,rmse——0.10505525706095352
 
 # 未打乱噪声随机（0.1-1）
-# 原始mae——0.093452105029358,rmse——0.12760624829590045
-# 加噪声mae——0.19761688529278817,rmse——0.2220455080142951
-# 加噪声emmae——0.0940859885912482,rmse——0.12947617659285227
+# 原始mae——0.07626382099552978,rmse——0.09489795403125668
+# 加噪声mae——0.14051570030371363,rmse——0.17043448309856685
+# 加噪声emmae——0.030281357527672872,rmse——0.0430921017148676
+
+# 打乱噪声随机（0.1-1）
+# 原始mae——0.056230792460614534,rmse——0.09455072528008268
+# 加噪声mae——0.14850025364738945,rmse——0.19376539417303146
+# 加噪声emmae——0.13682227137118033,rmse——0.1741546963955005
+
+
+# 均值，由于打乱数据对结果影响太大，所以用原始数据
+# 0.01-0.1
+# 原始mae——0.07626382099552978,rmse——0.09489795403125671
+# 加噪声mae——0.14311266028500108,rmse——0.18213426934931345
+# 加噪声emmae——0.12183337793378574,rmse——0.1388892441387351
+# 0.01-0.2
+# 原始mae——0.07626382099552978,rmse——0.09489795403125671
+# 加噪声mae——0.17208451094735422,rmse——0.21280426518933931
+# 加噪声emmae——0.09938089692149622,rmse——0.11574484779076583
+# 噪声固定在0.05，20
+# 原始mae——0.07626382099552978,rmse——0.09489795403125668
+# 加噪声mae——0.16818190132367922,rmse——0.2126929841644011
+# 加噪声emmae——0.10607879757308813,rmse——0.11957502258055241
+# 50
+# 原始mae——0.07626382099552977,rmse——0.09489795403125671
+# 加噪声mae——0.16310882306767716,rmse——0.20517628122260803
+# 加噪声emmae——0.07712563712018493,rmse——0.09397935927425323
+# 100
+# 原始mae——0.07626382099552978,rmse——0.09489795403125671
+# 加噪声mae——0.1567004361773343,rmse——0.1978117322419348
+# 加噪声emmae——0.07375625448595749,rmse——0.08875106102142176
