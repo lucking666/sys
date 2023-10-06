@@ -55,7 +55,7 @@ def add_em(X, Y,flag,x_test,Y_test,W0, b0):
     # print('w:',W)
     # print('b',b)
 
-    while dis>1e-5:#i<20
+    while i<20:#dis>1e-5
 
         # print(i)
         xita=[]
@@ -102,13 +102,13 @@ def add_em(X, Y,flag,x_test,Y_test,W0, b0):
         # print("rmse is :",s)
         i += 1
 
-    print('rmse_train',rmse_train)
-    plt.plot(rmse_train)
-    # plt.plot(rmse_test)
-    plt.legend(['train'])  #
-    plt.xlabel('loop')
-    plt.ylabel('RMSE+{}'.format(flag))
-    plt.show()
+    # print('rmse_train',rmse_train)
+    # plt.plot(rmse_train)
+    # # plt.plot(rmse_test)
+    # plt.legend(['train'])  #
+    # plt.xlabel('loop')
+    # plt.ylabel('RMSE+{}'.format(flag))
+    # plt.show()
 
     return W,b
 
@@ -139,9 +139,9 @@ N_train.append(round(40 * 0.9))
 # s = 100 # 分割数据的次数（对数据进行随机排序的次数）
 # m = 50  # 对于每次分割得到的训练集，生成m次噪声
 n = 20    # 最大噪声水平：times=19*0.05，noise_Y = times * standard_Y * np.random.randn(Y_train.shape[0], 1)
-s = 20   # 分割数据的次数（对数据进行随机排序的次数）
+s = 50   # 分割数据的次数（对数据进行随机排序的次数）
 m = 20    # 对于每次分割得到的训练集，生成m次噪声
-w = 20  #5轮噪声比例
+w = 1  #5轮噪声比例
 
 med_tls_rmse = []
 med_ls_rmse = []
@@ -160,11 +160,14 @@ for j in range(n):  # 调整噪声大小
     for x in range(w):
         # print("不同噪声比例：")
 
-        random.seed(x)
-        times = [random.uniform(0, 1) for _ in range(3)]
-        times[times.index(min(times))] = times[times.index(min(times))] * 0.5
-        times[times.index(max(times))] = times[times.index(max(times))] * 5
-        # print(times)
+        # random.seed(x)
+        times = [0.05, 0.1,1]
+
+        # 随机打乱数组的顺序
+        # random.shuffle(times)
+
+
+        print(times)
         times[0] = (times[0] * j * 0.05)
         times[1] = (times[1] * j * 0.05)
         times[2] = (times[2] * j * 0.05)

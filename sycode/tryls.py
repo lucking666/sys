@@ -139,9 +139,9 @@ N_train.append(round(40 * 0.9))
 # s = 100 # 分割数据的次数（对数据进行随机排序的次数）
 # m = 50  # 对于每次分割得到的训练集，生成m次噪声
 n = 20    # 最大噪声水平：times=19*0.05，noise_Y = times * standard_Y * np.random.randn(Y_train.shape[0], 1)
-s = 10   # 分割数据的次数（对数据进行随机排序的次数）
-m = 1    # 对于每次分割得到的训练集，生成m次噪声
-w = 100  #5轮噪声比例
+s = 30   # 分割数据的次数（对数据进行随机排序的次数）
+m = 20    # 对于每次分割得到的训练集，生成m次噪声
+w = 1  #5轮噪声比例
 
 med_tls_rmse = []
 med_ls_rmse = []
@@ -163,7 +163,7 @@ for j in range(n):  # 调整噪声大小
         times = [0.05, 0.1, 1]
 
         # 随机打乱数组的顺序
-        random.shuffle(times)
+        # random.shuffle(times)
         # print(times)
         times[0] = (times[0] * j * 0.05)
         times[1] = (times[1] * j * 0.05)
