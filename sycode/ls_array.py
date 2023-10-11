@@ -76,7 +76,7 @@ def add_em(X, Y,flag,x_test,Y_test,W0, b0):
         lamuda.append( 1/_std[2])
         # #将标准差进行标准化
         for c in range(len(lamuda)):
-            lamuda[c] = lamuda[c] / (np.sum(lamuda))
+            lamuda[c] = lamuda[c] / (np.sum(lamuda)*0.35)
 
         #对数据集加权
         X_dataframe[:N_train[0], 0:6]=X_dataframe[:N_train[0], 0:6]* lamuda[0]
@@ -151,7 +151,6 @@ med_tls_rmse = []
 med_ls_rmse = []
 med_tls_em_rmse = []
 med_ls_em_rmse = []
-times_list = [[1, 0.1, 0.02], [1, 0.09, 0.1],[1, 0.18, 0.09], [0.9,0.1 , 0.45],[0.8, 0.1, 0.05], [0.93, 0.06, 0.1]]
 
 for j in range(n):  # 调整噪声大小
     np.random.seed(j)
@@ -165,6 +164,7 @@ for j in range(n):  # 调整噪声大小
     for x in range(w):
         # print("不同噪声比例：")
 
+        times_list = [[1, 0.1, 0.02], [1, 0.09, 0.1],[1, 0.18, 0.09], [0.9,0.1 , 0.45],[0.8, 0.1, 0.05], [0.93, 0.06, 0.1]]
         times = copy.deepcopy(times_list[x])
         # times = [random.uniform(0, 1) for _ in range(3)]
         # times[times.index(min(times))] = times[times.index(min(times))] * 0.05
@@ -172,7 +172,7 @@ for j in range(n):  # 调整噪声大小
 
         # 随机打乱数组的顺序
         # random.shuffle(times)
-        print(times)
+        # print(times)
         times[0] = (times[0] * j * 0.05)
         times[1] = (times[1] * j * 0.05)
         times[2] = (times[2] * j * 0.05)
@@ -187,6 +187,7 @@ for j in range(n):  # 调整噪声大小
 
         # print('j:',j)
         # print('times[]=:', times)
+        print(times)
 
         for p in range(s):  # 分割数据
             # print("不同训练集分割：", p)
@@ -241,7 +242,6 @@ for j in range(n):  # 调整噪声大小
                 Y_train = X_train_noise[..., 5].reshape(-1, 1)
 
                 for index in range(len(X_train_noise)):
-                    flag = int(X_train_noise[index][6])
                     for i in range(6):
                         noise_X[:, i] *= (standard_X[i])  # 根据每个特征的标准差生成噪声
                         X_train_noise[:, i] += noise_X[:, i]
@@ -291,7 +291,7 @@ print('med_ls_rmse:', med_ls_rmse)
 # plt.xlim(0,5)
 # x = np.linspace(0, 5, 20)
 x_plt=np.arange(0, 1, 0.05)
-plt.plot(x_plt,med_ls_em_rmse)
+plt.plot(x_plt,med_ls_em_rmse,)
 plt.plot(x_plt,med_ls_rmse)
 plt.legend(['LS_EM', 'LS'])  #
 plt.xlabel('Noise')

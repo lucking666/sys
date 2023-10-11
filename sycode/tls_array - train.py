@@ -76,7 +76,7 @@ def add_em(X, Y,flag,x_test,Y_test,W0, b0,N_train):
         lamuda.append( 1/_std[2])
         # #将标准差进行标准化
         for c in range(len(lamuda)):
-            lamuda[c] = lamuda[c] / (np.sum(lamuda))
+            lamuda[c] = lamuda[c] / (np.sum(lamuda)*2)
 
         #对数据集加权
         X_dataframe[:N_train[0], 0:6]=X_dataframe[:N_train[0], 0:6]* lamuda[0]
@@ -140,8 +140,8 @@ train_array = np.arange(0.15, 1.0, 0.1)
 # s = 100 # 分割数据的次数（对数据进行随机排序的次数）
 # m = 50  # 对于每次分割得到的训练集，生成m次噪声
 n = 1    # 最大噪声水平：times=19*0.05，noise_Y = times * standard_Y * np.random.randn(Y_train.shape[0], 1)
-s = 50   # 分割数据的次数（对数据进行随机排序的次数）
-m = 20    # 对于每次分割得到的训练集，生成m次噪声
+s = 10   # 分割数据的次数（对数据进行随机排序的次数）
+m = 10    # 对于每次分割得到的训练集，生成m次噪声
 w = 1  #5轮噪声比例
 
 
@@ -170,7 +170,7 @@ for rise in train_array:  # 调整噪声大小
     for x in range(w):
         # print("不同噪声比例：")
         times_list = [[1, 0.1, 0.02], [1, 0.09, 0.1],[1, 0.18, 0.09], [0.9,0.1 , 0.45],[0.8, 0.1, 0.05], [0.93, 0.06, 0.1]]
-        times = [1, 0.01,0.01]
+        times = [1, 0.8, 0.06]
         # times = [random.uniform(0, 1) for _ in range(3)]
         # times[times.index(min(times))] = times[times.index(min(times))] * 0.05
         # times[times.index(max(times))] = times[times.index(max(times))] * 1
@@ -178,9 +178,9 @@ for rise in train_array:  # 调整噪声大小
         # 随机打乱数组的顺序
         # random.shuffle(times)
         print(times)
-        times[0] = (times[0] * 1)
-        times[1] = (times[1] * 1)
-        times[2] = (times[2] * 1)
+        times[0] = (times[0] * 0.95)
+        times[1] = (times[1] * 0.95)
+        times[2] = (times[2] * 0.95)
 
         for p in range(s):  # 分割数据
             # print("不同训练集分割：",p)

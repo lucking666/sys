@@ -76,7 +76,7 @@ def add_em(X, Y,flag,x_test,Y_test,W0, b0):
         lamuda.append( 1/_std[2])
         # #将标准差进行标准化
         for c in range(len(lamuda)):
-            lamuda[c] = lamuda[c] / (np.sum(lamuda))
+            lamuda[c] = lamuda[c] / (np.sum(lamuda)*0.8)
 
         #对数据集加权
         X_dataframe[:N_train[0], 0:6]=X_dataframe[:N_train[0], 0:6]* lamuda[0]
@@ -104,10 +104,10 @@ def add_em(X, Y,flag,x_test,Y_test,W0, b0):
         i += 1
 
 
-
+    #
     # print('rmse_train',rmse_train)
     # plt.plot(rmse_train)
-    # # plt.plot(rmse_test)
+    # plt.plot(rmse_test)
     # plt.legend(['train'])  #
     # plt.xlabel('loop')
     # plt.ylabel('RMSE+{}'.format(flag))
