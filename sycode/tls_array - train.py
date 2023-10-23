@@ -171,6 +171,8 @@ for rise in train_array:  # 调整噪声大小
         # print("不同噪声比例：")
         times_list = [[1, 0.1, 0.02], [1, 0.09, 0.1],[1, 0.18, 0.09], [0.9,0.1 , 0.45],[0.8, 0.1, 0.05], [0.93, 0.06, 0.1]]
         times = [1, 0.8, 0.06]
+        times = [0, 0, 0]
+
         # times = [random.uniform(0, 1) for _ in range(3)]
         # times[times.index(min(times))] = times[times.index(min(times))] * 0.05
         # times[times.index(max(times))] = times[times.index(max(times))] * 1

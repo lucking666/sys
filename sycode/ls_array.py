@@ -141,54 +141,47 @@ N_train.append(round(40 * 0.9))
 # s = 100 # 分割数据的次数（对数据进行随机排序的次数）
 # m = 50  # 对于每次分割得到的训练集，生成m次噪声
 n = 20    # 最大噪声水平：times=19*0.05，noise_Y = times * standard_Y * np.random.randn(Y_train.shape[0], 1)
-s = 50   # 分割数据的次数（对数据进行随机排序的次数）
+s = 50  # 分割数据的次数（对数据进行随机排序的次数）
 m = 20   # 对于每次分割得到的训练集，生成m次噪声
-w = 6  #5轮噪声比例
+w = 3  # 5轮噪声比例
+times_list = [[1, 0.1, 0.02], [0.98, 0.1, 0.06], [0.96, 0.18, 0.05]]
+
+# times_list = [[0.98, 0.1, 0.06]]
 
 
 
-med_tls_rmse = []
-med_ls_rmse = []
-med_tls_em_rmse = []
-med_ls_em_rmse = []
 
-for j in range(n):  # 调整噪声大小
-    np.random.seed(j)
-    print("noise_level:", j)
+for x in range(w):
+
+    # times = [random.uniform(0, 1) for _ in range(3)]
+    # times[times.index(min(times))] = times[times.index(min(times))] * 0.05
+    # times[times.index(max(times))] = times[times.index(max(times))] * 1
+
+    # 随机打乱数组的顺序
+    # random.shuffle(times)
+    # print(times)
+    med_tls_rmse = []
+    med_ls_rmse = []
+    med_tls_em_rmse = []
+    med_ls_em_rmse = []
     tls_rmse = []
     ls_rmse = []
     tls_em_rmse = []
     ls_em_rmse = []
-    copy_data = data_x
 
-    for x in range(w):
-        # print("不同噪声比例：")
-
-        times_list = [[1, 0.1, 0.02], [1, 0.09, 0.1],[1, 0.18, 0.09], [0.9,0.1 , 0.45],[0.8, 0.1, 0.05], [0.93, 0.06, 0.1]]
+    for j in range(n):  # 调整噪声大小
+        np.random.seed(j)
         times = copy.deepcopy(times_list[x])
-        # times = [random.uniform(0, 1) for _ in range(3)]
-        # times[times.index(min(times))] = times[times.index(min(times))] * 0.05
-        # times[times.index(max(times))] = times[times.index(max(times))] * 1
 
-        # 随机打乱数组的顺序
-        # random.shuffle(times)
-        # print(times)
+        copy_data = data_x
+
+
         times[0] = (times[0] * j * 0.05)
         times[1] = (times[1] * j * 0.05)
         times[2] = (times[2] * j * 0.05)
-        # times = []
-        # times.append( 0.1* j * 0.05)
-        # times.append(0.45 * j * 0.05)
-        # times.append(2 * j * 0.05)
-        # times=[]
-        # times.append(random.randint(0, 1) * j )
-        # times.append(random.randint(0, 1) * j )
-        # times.append(random.randint(0, 1) * j )
 
-        # print('j:',j)
-        # print('times[]=:', times)
         print(times)
-
+        print("noise_level:", j)
         for p in range(s):  # 分割数据
             # print("不同训练集分割：", p)
             # 划分训练集与测试集
@@ -272,10 +265,10 @@ for j in range(n):  # 调整噪声大小
             # print('med_ls_rmse:', ls_rmse)
             # print('med_ls_em_rmse:', ls_em_rmse)
     # med_tls_rmse.append(np.median(tls_rmse))
-    med_ls_em_rmse.append(np.median(ls_em_rmse))
-    med_ls_rmse.append(np.median(ls_rmse))
-    med_tls_em_rmse.append(np.median(tls_em_rmse))
-    med_tls_rmse.append(np.median(tls_rmse))
+        med_ls_em_rmse.append(np.median(ls_em_rmse))
+        med_ls_rmse.append(np.median(ls_rmse))
+        med_tls_em_rmse.append(np.median(tls_em_rmse))
+        med_tls_rmse.append(np.median(tls_rmse))
 
     # 画图tls
     # plt.plot(med_tls_em_rmse)
@@ -285,21 +278,24 @@ for j in range(n):  # 调整噪声大小
     # plt.ylabel('RMSE')
     # plt.show()
 
-print('med_ls_em_rmse:', med_ls_em_rmse)
-print('med_ls_rmse:', med_ls_rmse)
-# 画图ls
-# plt.xlim(0,5)
-# x = np.linspace(0, 5, 20)
-x_plt=np.arange(0, 1, 0.05)
-plt.plot(x_plt,med_ls_em_rmse,)
-plt.plot(x_plt,med_ls_rmse)
-plt.legend(['LS_EM', 'LS'])  #
-plt.xlabel('Noise')
-plt.ylabel('RMSE')
-plt.xticks(x_plt)
-plt.locator_params(axis='x', nbins=10)  # 在横坐标上显示6个刻度
-plt.title("data split:{},noise generation:{}".format(s, m))
-plt.show()
+    print('med_ls_em_rmse:', med_ls_em_rmse)
+    print('med_ls_rmse:', med_ls_rmse)
+    # 画图ls
+    # plt.xlim(0,5)
+    # x = np.linspace(0, 5, 20)
+
+    plt.figure(figsize=(7, 5))
+    x_plt=np.arange(0, 1, 0.05)
+    plt.plot(x_plt,med_ls_em_rmse,)
+    plt.plot(x_plt,med_ls_rmse)
+    plt.legend(['LS_EM', 'LS'])  #
+    plt.xlabel('Noise')
+    plt.ylabel('RMSE')
+    plt.xticks(x_plt)
+    plt.locator_params(axis='x', nbins=10)  # 在横坐标上显示6个刻度
+    plt.title("data split:{},noise generation:{}".format(s, m))
+    plt.show()
+
 
 
 
