@@ -149,18 +149,18 @@ maelistnoise=[]
 rmselistnoise=[]
 maelistnoiseemd=[]
 rmselistnoiseemd=[]
-for i in range(100):
+for i in range(50):
     Xtrain=X_train
     Xtest=X_test
-    mae,rmse=get_result(Xtrain, y_train, Xtest, y_test)
-    maelist.append(mae)
-    rmselist.append(rmse)
+    # mae,rmse=get_result(Xtrain, y_train, Xtest, y_test)
+    # maelist.append(mae)
+    # rmselist.append(rmse)
     # std=random.uniform(0.01, 0.2)
-    std = 0.05
-    Xtrain = add_noise(Xtrain, std)
-    maenoise, rmsenoise = get_result(Xtrain, y_train, Xtest, y_test)
-    maelistnoise.append(maenoise)
-    rmselistnoise.append(rmsenoise)
+    # std = 0.05
+    # Xtrain = add_noise(Xtrain, std)
+    # maenoise, rmsenoise = get_result(Xtrain, y_train, Xtest, y_test)
+    # maelistnoise.append(maenoise)
+    # rmselistnoise.append(rmsenoise)
     Xtrain, Xtest = ceemdan(Xtrain, Xtest)
     maenoiseemd, rmsenoiseemd = get_result(Xtrain, y_train, Xtest, y_test)
     maelistnoiseemd.append(maenoiseemd)
@@ -178,5 +178,6 @@ print('加噪声emmae——{},rmse——{}'.format(np.mean(maelistnoiseemd), np.
 # 均值，由于打乱数据对结果影响太大，所以用原始数据固定噪声0.05，使用全部数据，7:3比例
 # 100次实验
 # 原始mae——0.090088380826365,rmse——0.12103350911903506
+# 不加噪声使用em效果比原始更差mae——0.10268857104327747,rmse——0.13249171137723578
 # 加噪声mae——0.17295377833386066,rmse——0.21222657208643214
 # 加噪声emmae——0.13890003309961776,rmse——0.17256771993117576
