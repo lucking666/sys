@@ -14,6 +14,7 @@ from PyEMD import CEEMDAN
 import statistics
 from sklearn.feature_selection import SelectFromModel
 from sklearn.ensemble import RandomForestRegressor
+from saved_xgb_regression_model import OptimizedXGBRegressor
 
 
 rowdata = pd.read_csv('rowdata.csv')
@@ -136,9 +137,14 @@ def get_result(X_train, y_train, X_test, y_test):
     # lr=LinearRegression().fit(X_train,y_train)
     # y_pred=lr.predict(X_test)
 
-    xgb = xgboost.XGBRegressor()
-    xgb.fit(X_train, y_train)
-    y_pred = xgb.predict(X_test)
+    # 创建OptimizedXGBRegressor对象
+    xgb_model = OptimizedXGBRegressor()
+
+    # 拟合数据
+    xgb_model.fit(X_train, y_train)
+
+    # 预测
+    y_pred = xgb_model.predict(X_test)
 
     mae, rmse = evaluation(y_test, y_pred)
     # print('mae——{},rmse——{}'.format(mae, rmse))
@@ -163,8 +169,8 @@ def getRFfeatures(X,Y,Xtest):
     selected_features = X[:, selected_feature_indices]
 
     # 打印被选择的特征的索引和特征值
-    print("被选择的特征的索引：", selected_feature_indices)
-    print("被选择的特征：", selected_features)
+    # print("被选择的特征的索引：", selected_feature_indices)
+    # print("被选择的特征：", selected_features)
     X=selected_features
     selected_columns = Xtest[:, selected_feature_indices]
 
@@ -181,7 +187,7 @@ maelistnoiseemd = []
 rmselistnoiseemd = []
 maelistnoiseemd1 = []
 rmselistnoiseemd1 = []
-for i in range(1):
+for i in range(100):
     random.seed(i)
     Xtrain = X_train
     Xtest = X_test
@@ -202,7 +208,6 @@ print('加噪声emmae——{},rmse——{}'.format(np.median(maelistnoiseemd), n
 # 原始mae——0.06506055792111122,rmse——0.08479516256745924
 # 加噪声mae——0.18514188773617876,rmse——0.22399060460510695
 # 加噪声emmae——0.06313057499555567,rmse——0.08271343798051889
-# 加噪声且变化emmae——0.05889135176690331,rmse——0.07248371396730052
-# 加噪声emmae且加上——0.027635994847525804,rmse——0.04111405069986597
+# 加噪声emmae——0.032390513735415905,rmse——0.0468109967607576
 
 
