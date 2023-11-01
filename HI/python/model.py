@@ -15,6 +15,9 @@ import statistics
 from sklearn.feature_selection import SelectFromModel
 from sklearn.ensemble import RandomForestRegressor
 from saved_xgb_regression_model import OptimizedXGBRegressor
+from sklearn.neighbors import NearestNeighbors
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_selection import RFE
 
 
 rowdata = pd.read_csv('rowdata.csv')
@@ -177,6 +180,65 @@ def getRFfeatures(X,Y,Xtest):
 
     return X,selected_columns
 
+def reliefF(X, y, k):
+    n_samples, n_features = X.shape
+    weights = np.zeros(n_features)
+
+    # Find k nearest neighbors for each sample
+    neigh = NearestNeighbors(n_neighbors=k + 1)
+    neigh.fit(X)
+    distances, indices = neigh.kneighbors(X)
+
+    for i in range(n_samples):
+        same_class_neighbors = indices[i, 1:]  # Exclude the sample itself
+        diff_class_neighbors = np.delete(indices, same_class_neighbors)
+
+        for j in range(n_features):
+            feature_diff_same = np.mean(np.abs(X[same_class_neighbors, j] - X[i, j]))
+            feature_diff_diff = np.mean(np.abs(X[diff_class_neighbors, j] - X[i, j]))
+            weights[j] += feature_diff_diff - feature_diff_same
+
+    weights /= n_samples
+
+    return weights
+
+
+def getReliefFfeatures(X,Y,X_test):
+    k = 2  # 设置 k 值
+    weights = reliefF(X, Y, k)
+
+    print("特征权重:", weights)
+    w=weights
+    # w=np.abs(weights)
+
+    X_train=X*w
+    X__test=X_test*w
+
+
+    return X_train,X__test
+
+
+def getRFE_RFfeatures(X,Y,X_test):
+    model = RandomForestClassifier()
+
+    # 创建特征递归消除对象
+    rfe = RFE(model, n_features_to_select=3)  # 选择3个最重要的特征
+
+    # 使用特征递归消除选择特征
+    rfe.fit(X, Y)
+
+    # 获取所选择的特征列索引值
+    selected_feature_indices = np.where(rfe.ranking_ == 1)[0]
+
+    print("选择的特征列索引值:", selected_feature_indices)
+
+    X_train=X[:,selected_feature_indices]
+    X__test=X_test[:,selected_feature_indices]
+
+
+    return X_train,X__test
+
+
 
 
 maelist = []
@@ -196,18 +258,21 @@ for i in range(100):
     # std = 0.05
     Xtrain = add_noise(Xtrain, std)#加噪声
     Xtrain, Xtest = ceemdan(Xtrain, Xtest)
-    Xtrain,Xtest=getRFfeatures(Xtrain,y_train,Xtest)
-    print("到这里是模态分解完毕,使用随机森林进行特征选择,得到的结果作为最终结果")
+    # Xtrain,Xtest=getRFfeatures(Xtrain,y_train,Xtest)
+    # Xtrain, Xtest = getReliefFfeatures(Xtrain, y_train, Xtest)
+    Xtrain, Xtest = getRFE_RFfeatures(Xtrain, y_train, Xtest)
+    # print("到这里是模态分解完毕,使用随机森林进行特征选择,得到的结果作为最终结果")
     maenoiseemd, rmsenoiseemd = get_result(Xtrain, y_train, Xtest, y_test)
     maelistnoiseemd.append(maenoiseemd)
     rmselistnoiseemd.append(rmsenoiseemd)
 
-print('加噪声emmae——{},rmse——{}'.format(np.median(maelistnoiseemd), np.median(rmselistnoiseemd)))
+print('加噪声em加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd), np.median(rmselistnoiseemd)))
 
 # 未打乱噪声随机（0.1-1）100
 # 原始mae——0.06506055792111122,rmse——0.08479516256745924
 # 加噪声mae——0.18514188773617876,rmse——0.22399060460510695
 # 加噪声emmae——0.06313057499555567,rmse——0.08271343798051889
-# 加噪声emmae——0.032390513735415905,rmse——0.0468109967607576
+# 加噪声emmae——0.032390513735415905,rmse——0.0468109967607576 RF直接去除选择前三
+#加噪声em加特征选择算法mae——0.061412514800979895,rmse——0.07928092007857264 reliefF算法
 
 
