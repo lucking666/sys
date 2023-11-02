@@ -219,13 +219,13 @@ def getReliefFfeatures(X,Y,X_test):
 
 
 def getRFE_RFfeatures(X,Y,X_test):
-    model = RandomForestClassifier()
+    model = RandomForestRegressor()
 
     # 创建特征递归消除对象
-    rfe = RFE(model, n_features_to_select=3)  # 选择3个最重要的特征
+    rfe = RFE(model, n_features_to_select=4)  # 选择3个最重要的特征
 
     # 使用特征递归消除选择特征
-    rfe.fit(X, Y)
+    rfe.fit(X, Y.ravel())
 
     # 获取所选择的特征列索引值
     selected_feature_indices = np.where(rfe.ranking_ == 1)[0]
@@ -273,6 +273,6 @@ print('加噪声em加特征选择算法mae——{},rmse——{}'.format(np.media
 # 加噪声mae——0.18514188773617876,rmse——0.22399060460510695
 # 加噪声emmae——0.06313057499555567,rmse——0.08271343798051889
 # 加噪声emmae——0.032390513735415905,rmse——0.0468109967607576 RF直接去除选择前三
-#加噪声em加特征选择算法mae——0.061412514800979895,rmse——0.07928092007857264 reliefF算法
-
+# 加噪声em加特征选择算法mae——0.061412514800979895,rmse——0.07928092007857264 reliefF算法
+# 加噪声em加特征选择算法mae——0.06721409877731299,rmse——0.07779184785704396 RFE+RF
 
