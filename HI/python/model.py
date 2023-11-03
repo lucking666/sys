@@ -44,11 +44,12 @@ feature2_scale = normalization(feature2)
 # 对特征和数据进行取对数
 import math
 
-labellog = []
-for i in label:
-    labellog.append(math.log(i, 10))
-
-labellog = np.array(labellog).reshape(-1, 1)
+# labellog = []
+# for i in label:
+#     labellog.append(math.log(i, 10))
+#
+# labellog = np.array(labellog).reshape(-1, 1)
+labellog=np.array(label).reshape(-1, 1)
 feature1_scale = feature1_scale[:]
 feature2_scale = feature2_scale[:]
 feature_scale = np.concatenate([feature1_scale, feature2_scale], axis=1)
@@ -154,8 +155,41 @@ def get_result(X_train, y_train, X_test, y_test):
     return mae, rmse
 
 
+def interaction(x):
+    n_features = x.shape[1]
+    combinations = [(i, j) for i in range(n_features) for j in range(i, n_features)]
+    interaction_cols = [x[:, i] * x[:, j] for i, j in combinations]
+
+    # 将原始列和相互作用列合并成新数组 X_
+    X_ = np.column_stack([x] + interaction_cols)
+
+    return X_
+
+
+
+def showFeatures(data):
+    x = range(58)
+
+    # 创建纵轴数据，使用data的5个列
+    y = data
+
+    # 创建图形
+    plt.plot(x, y)
+
+    # 添加标题和标签
+    plt.title('Data Plot')
+    plt.xlabel('横轴')
+    plt.ylabel('纵轴')
+
+    # 显示图形
+    plt.show()
 def getRFfeatures(X,Y,Xtest):
     clf = RandomForestRegressor(n_estimators=100)
+    # X =  interaction(X)
+    # Xtest = interaction(Xtest)
+    # for index in range(len(X[0])):
+    #     data=X[:,index]
+    #     showFeatures(data)
 
     # 使用训练集X和Y进行拟合
     clf.fit(X, Y)
@@ -167,12 +201,12 @@ def getRFfeatures(X,Y,Xtest):
     # 获取特征的重要性分数
     feature_importances = clf.feature_importances_
     # 选择前n个最重要的特征
-    n = 3  # 选择前3个特征，你可以根据需要调整n的值
+    n = 1  # 选择前3个特征，你可以根据需要调整n的值
     selected_feature_indices = np.argsort(feature_importances)[::-1][:n]
     selected_features = X[:, selected_feature_indices]
 
     # 打印被选择的特征的索引和特征值
-    # print("被选择的特征的索引：", selected_feature_indices)
+    print("被选择的特征的索引：", selected_feature_indices)
     # print("被选择的特征：", selected_features)
     X=selected_features
     selected_columns = Xtest[:, selected_feature_indices]
@@ -222,7 +256,7 @@ def getRFE_RFfeatures(X,Y,X_test):
     model = RandomForestRegressor()
 
     # 创建特征递归消除对象
-    rfe = RFE(model, n_features_to_select=4)  # 选择3个最重要的特征
+    rfe = RFE(model, n_features_to_select=1)  # 选择3个最重要的特征
 
     # 使用特征递归消除选择特征
     rfe.fit(X, Y.ravel())
@@ -249,7 +283,7 @@ maelistnoiseemd = []
 rmselistnoiseemd = []
 maelistnoiseemd1 = []
 rmselistnoiseemd1 = []
-for i in range(100):
+for i in range(40):
     random.seed(i)
     Xtrain = X_train
     Xtest = X_test
@@ -257,22 +291,37 @@ for i in range(100):
     std = random.uniform(0.01, 1)
     # std = 0.05
     Xtrain = add_noise(Xtrain, std)#加噪声
+    maenoise, rmsenoise = get_result(Xtrain, y_train, Xtest, y_test)
+    maelistnoise.append(maenoise)
+    rmselistnoise.append(rmsenoise)
+
     Xtrain, Xtest = ceemdan(Xtrain, Xtest)
-    # Xtrain,Xtest=getRFfeatures(Xtrain,y_train,Xtest)
-    # Xtrain, Xtest = getReliefFfeatures(Xtrain, y_train, Xtest)
-    Xtrain, Xtest = getRFE_RFfeatures(Xtrain, y_train, Xtest)
+    # Xtrain,Xtest=getRFfeatures(Xtrain,y_train,Xtest)#随机森林
+    # Xtrain, Xtest = getReliefFfeatures(Xtrain, y_train, Xtest)#reliefF算法
+    Xtrain, Xtest = getRFE_RFfeatures(Xtrain, y_train, Xtest)#特征递归消除和随机森林结合
     # print("到这里是模态分解完毕,使用随机森林进行特征选择,得到的结果作为最终结果")
     maenoiseemd, rmsenoiseemd = get_result(Xtrain, y_train, Xtest, y_test)
+    maelist.append(mae)
+    rmselist.append(rmse)
     maelistnoiseemd.append(maenoiseemd)
     rmselistnoiseemd.append(rmsenoiseemd)
 
+print('原始mae——{},rmse——{}'.format(np.median(maelist), np.median(rmselist)))
+print('加噪声mae——{},rmse——{}'.format(np.median(maelistnoise), np.median(rmselistnoise)))
 print('加噪声em加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd), np.median(rmselistnoiseemd)))
 
 # 未打乱噪声随机（0.1-1）100
 # 原始mae——0.06506055792111122,rmse——0.08479516256745924
 # 加噪声mae——0.18514188773617876,rmse——0.22399060460510695
 # 加噪声emmae——0.06313057499555567,rmse——0.08271343798051889
-# 加噪声emmae——0.032390513735415905,rmse——0.0468109967607576 RF直接去除选择前三
 # 加噪声em加特征选择算法mae——0.061412514800979895,rmse——0.07928092007857264 reliefF算法
-# 加噪声em加特征选择算法mae——0.06721409877731299,rmse——0.07779184785704396 RFE+RF
+# 加噪声em加特征选择算法mae——0.06721409877731299,rmse——0.07779184785704396 RFE+RF可以取前1
+# 加噪声em加特征选择算法mae——0.03368157846423894,rmse——0.04593722516076188随机森林交互取前6
 
+
+
+# 未进行log化
+# 原始mae原始mae——96.91624215932993,rmse——122.06565273117249
+# 加噪声加噪声mae——268.7825757540189,rmse——326.8128460743167
+# RFE——RF:2个特征加噪声em加特征选择算法mae——91.88916191687952,rmse——119.2735767862611
+# RFE——RF:1个特征加噪声em加特征选择算法mae——31.650313744178185,rmse——52.71005811134021
