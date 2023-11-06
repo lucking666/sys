@@ -44,12 +44,12 @@ feature2_scale = normalization(feature2)
 # 对特征和数据进行取对数
 import math
 
-# labellog = []
-# for i in label:
-#     labellog.append(math.log(i, 10))
-#
-# labellog = np.array(labellog).reshape(-1, 1)
-labellog=np.array(label).reshape(-1, 1)
+labellog = []
+for i in label:
+    labellog.append(math.log(i, 10))
+
+labellog = np.array(labellog).reshape(-1, 1)
+# labellog=np.array(label).reshape(-1, 1)
 feature1_scale = feature1_scale[:]
 feature2_scale = feature2_scale[:]
 feature_scale = np.concatenate([feature1_scale, feature2_scale], axis=1)
@@ -201,7 +201,7 @@ def getRFfeatures(X,Y,Xtest):
     # 获取特征的重要性分数
     feature_importances = clf.feature_importances_
     # 选择前n个最重要的特征
-    n = 1  # 选择前3个特征，你可以根据需要调整n的值
+    n = 3  # 选择前3个特征，你可以根据需要调整n的值
     selected_feature_indices = np.argsort(feature_importances)[::-1][:n]
     selected_features = X[:, selected_feature_indices]
 
@@ -272,6 +272,9 @@ def getRFE_RFfeatures(X,Y,X_test):
 
     return X_train,X__test
 
+def calculate(X,Y):
+    r,p=stats.spearmanr(X,Y)
+    return r
 
 
 
@@ -283,24 +286,28 @@ maelistnoiseemd = []
 rmselistnoiseemd = []
 maelistnoiseemd1 = []
 rmselistnoiseemd1 = []
-for i in range(40):
+for i in range(100):
     random.seed(i)
     Xtrain = X_train
     Xtest = X_test
     mae, rmse = get_result(Xtrain, y_train, Xtest, y_test)
     std = random.uniform(0.01, 1)
     # std = 0.05
-    Xtrain = add_noise(Xtrain, std)#加噪声
+    # Xtrain = add_noise(Xtrain, std)#加噪声
     maenoise, rmsenoise = get_result(Xtrain, y_train, Xtest, y_test)
     maelistnoise.append(maenoise)
     rmselistnoise.append(rmsenoise)
 
     Xtrain, Xtest = ceemdan(Xtrain, Xtest)
+    celllist = []
+    for col in range(len(Xtrain[0])):
+        column_data = Xtrain[:, col]
+        celllist.append(calculate(column_data, y_train))
     # Xtrain,Xtest=getRFfeatures(Xtrain,y_train,Xtest)#随机森林
     # Xtrain, Xtest = getReliefFfeatures(Xtrain, y_train, Xtest)#reliefF算法
     Xtrain, Xtest = getRFE_RFfeatures(Xtrain, y_train, Xtest)#特征递归消除和随机森林结合
     # print("到这里是模态分解完毕,使用随机森林进行特征选择,得到的结果作为最终结果")
-    maenoiseemd, rmsenoiseemd = get_result(Xtrain, y_train, Xtest, y_test)
+    maenoiseemd, rmsenoiseemd = get_result(Xtrain , y_train, Xtest, y_test)
     maelist.append(mae)
     rmselist.append(rmse)
     maelistnoiseemd.append(maenoiseemd)
@@ -313,15 +320,13 @@ print('加噪声em加特征选择算法mae——{},rmse——{}'.format(np.media
 # 未打乱噪声随机（0.1-1）100
 # 原始mae——0.06506055792111122,rmse——0.08479516256745924
 # 加噪声mae——0.18514188773617876,rmse——0.22399060460510695
-# 加噪声emmae——0.06313057499555567,rmse——0.08271343798051889
-# 加噪声em加特征选择算法mae——0.061412514800979895,rmse——0.07928092007857264 reliefF算法
-# 加噪声em加特征选择算法mae——0.06721409877731299,rmse——0.07779184785704396 RFE+RF可以取前1
-# 加噪声em加特征选择算法mae——0.03368157846423894,rmse——0.04593722516076188随机森林交互取前6
+# 加噪声em加特征选择算法mae——0.061412514800979895,rmse——0.07928092007857264 reliefF
+# 加噪声em加特征选择算法mae——0.0271271013718943,rmse——0.04098108520942392 RFE+RF
+
 
 
 
 # 未进行log化
 # 原始mae原始mae——96.91624215932993,rmse——122.06565273117249
 # 加噪声加噪声mae——268.7825757540189,rmse——326.8128460743167
-# RFE——RF:2个特征加噪声em加特征选择算法mae——91.88916191687952,rmse——119.2735767862611
 # RFE——RF:1个特征加噪声em加特征选择算法mae——31.650313744178185,rmse——52.71005811134021

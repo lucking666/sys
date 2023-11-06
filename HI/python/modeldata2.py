@@ -6,10 +6,13 @@ from sklearn import svm
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 import xgboost
 import random
+from sklearn.decomposition import FastICA
 from sklearn.neural_network import MLPRegressor
 from math import sqrt
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
+from xgboost import XGBRegressor
+from sklearn.decomposition import PCA
 from PyEMD import CEEMDAN,EMD,EEMD
 import statistics
 from sklearn.feature_selection import SelectFromModel
@@ -25,9 +28,36 @@ from tensorflow.python import keras
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
+import statsmodels.api as sm
+from sklearn.decomposition import FastICA
+import numpy as np
+from sklearn.metrics.pairwise import rbf_kernel
+from sklearn.metrics.pairwise import polynomial_kernel
+from sklearn.metrics.pairwise import linear_kernel
+from sklearn.metrics.pairwise import sigmoid_kernel
+from scipy.signal import find_peaks
+from scipy.signal import find_peaks
+from scipy.fftpack import fft, ifft
+from numpy.fft import fftshift
+from sklearn.svm import SVR
+from sklearn.ensemble import AdaBoostRegressor
+from sklearn.tree import DecisionTreeRegressor
 
 
-rowdata = pd.read_csv('rowdata.csv')
+
+
+
+
+
+
+
+
+
+
+
+
+
+rowdata = pd.read_csv('rowdata_var.csv')
 random_data = rowdata
 # random_data=rowdata.sample(frac=1).reset_index(drop=True).iloc[:,1:]
 
@@ -117,11 +147,14 @@ def ceemdan(X_train, X_test):
     X_data = np.vstack((X_train, X_test))
     IImfs = []
     data = X_data.ravel()
-    eemd= CEEMDAN()
-    eemd.ensemble_size=5
+    ceemdan= CEEMDAN()
+    ceemdan.trials = 100  # 迭代次数
+    ceemdan.max_siftings = 50  # SIFT 迭代次数
+    ceemdan.noise_std = 0.01  # 白噪声标准差
+    ceemdan.ensemble_size=5
 
-    eemd.ceemdan(data)
-    imfs, res = eemd.get_imfs_and_residue()
+    ceemdan.ceemdan(data)
+    imfs, res = ceemdan.get_imfs_and_residue()
     # plt.figure(figsize=(12, 9))
     # plt.subplots_adjust(hspace=0.1)
     # plt.subplot(imfs.shape[0] + 3, 1, 1)
@@ -160,7 +193,113 @@ def Pywt(X_train, X_test):
 
 
 
+def seasonal(X_train, X_test):
+    # 将 X_train 和 X_test 合并成一个大的数据集 X_data
+    X_data = np.vstack((X_train, X_test))
 
+    # 初始化一个列表来保存分解后的成分
+    seasonal_components = []
+    index = pd.date_range(start='2023-01-01', periods=len(X_data), freq='D')
+    # 创建一个 Pandas Series 以便进行季节性分解
+    ts = pd.Series(X_data.ravel(), index=index)  # 选择 X_data 的第一列进行分解
+
+    # 执行时间序列分解
+    result = sm.tsa.seasonal_decompose(ts, model='additive')
+
+    # 提取分解结果中的各个成分，并将它们添加到 seasonal_components 列表中
+    seasonal_components = np.column_stack((ts.values, result.trend.values, result.seasonal.values, result.resid.values))
+    seasonal_components= np.nan_to_num(seasonal_components, nan=0.0)
+
+
+    # 分割分解后的数据，以便返回 X_train 和 X_test
+    X_train, X_test = seasonal_components[:len(X_train), :], seasonal_components[len(X_train):, :]
+
+    return X_train, X_test
+
+
+def pca(X_train, X_test):
+    # 将 X_train 和 X_test 合并成一个大的数据集 X_data
+    X_data = np.vstack((X_train, X_test))
+
+    # ica = FastICA(n_components=1, random_state=0)  # 设置要提取的独立成分数量
+    # S_ = ica.fit_transform(X_data)  # S_ 中包含了分离后的独立成分
+    #
+    # # 将分离出的独立成分添加为数组的列
+    # result_array = np.hstack((X_data, S_))
+
+    n_components = 2  # 指定要提取的独立成分数量
+    ica = FastICA(n_components=n_components, max_iter=2000, random_state=0)
+
+    # # 创建线性核
+    # X_linear_kernel = linear_kernel(X_data)
+
+    # 创建Sigmoid核
+    gamma = 0.1  # 核函数的参数
+    coef0 = 1  # 偏置项的系数
+    X_sigmoid_kernel = sigmoid_kernel(X_data, gamma=gamma, coef0=coef0)
+
+    # # 创建多项式核
+    # degree = 3  # 多项式的次数
+    # coef0 = 1  # 线性项的系数
+    # X_poly_kernel = polynomial_kernel(X_data, degree=degree, coef0=coef0)
+    # 使用核函数（如径向基函数 RBF 核）将数据映射到高维空间
+    # gamma = 1.0  # 核函数参数
+    # X_kernel = rbf_kernel(X_data, gamma=gamma)
+
+    # 执行非线性ICA分解
+    ica_components = ica.fit_transform(X_sigmoid_kernel)
+
+    # ica_components 包含了提取的非线性独立成分
+
+    # 还可以获取混合矩阵，以便对新数据进行转换
+    mixing_matrix = ica.mixing_
+
+    result_array=np.hstack((X_data, ica_components))
+
+    # # 创建PCA模型并拟合数据
+    # pca = PCA(n_components=1)  # 设置要提取的主成分数量
+    # X_pca = pca.fit_transform(X_data)  # X_pca 中包含了主成分
+    #
+    # # 将分离出的主成分和原始特征添加为数组的两列
+    # result_array = np.hstack((X_data, X_pca))
+
+    # 分割分解后的数据，以便返回 X_train 和 X_test
+    X_train, X_test = result_array[:len(X_train), :], result_array[len(X_train):, :]
+
+    return X_train, X_test
+
+
+
+def lmd(X_train, X_test):
+    # 将 X_train 和 X_test 合并成一个大的数据集 X_data
+    X_data = np.vstack((X_train, X_test))
+
+    def local_mean_decomposition_array(input_array):
+        # 将输入数组转换为一维
+        signal = input_array.ravel()
+        # 找到信号的局部极值点
+        peaks, _ = find_peaks(signal)
+        # 计算局部均值
+        local_means = []
+        for i in range(len(peaks) - 1):
+            local_mean = np.mean(signal[peaks[i]:peaks[i + 1]])
+            local_means.append(local_mean)
+        # 计算局部成分
+        local_components = signal - np.interp(np.arange(len(signal)), peaks[:-1], local_means)
+        # 将局部成分重新整理为形状 (40, n)
+        n = len(local_components)
+        local_components = local_components.reshape(-1, 1)
+        return local_components
+
+
+
+    components=local_mean_decomposition_array(X_data)
+
+    result_array=np.hstack((X_data, components))
+
+    X_train, X_test = result_array[:len(X_train), :], result_array[len(X_train):, :]
+
+    return X_train, X_test
 
 def evaluation(y_test, y_predict):
     mae = mean_absolute_error(y_test, y_predict)
@@ -190,6 +329,43 @@ def get_result(X_train, y_train, X_test, y_test):
     # print('mae——{},rmse——{}'.format(mae, rmse))
     return mae, rmse
 
+
+def get_result0(X, y, X_test, y_test):
+    # model1=svm.SVR(probability = True,kernel = 'rbf',c=0.1,max_iter=10)
+    # model1.fit(X_train,y_train)
+    # y_pred=model1.predict(X_test)
+
+    # lr=LinearRegression().fit(X_train,y_train)
+    # y_pred=lr.predict(X_test)
+
+    # 创建OptimizedXGBRegressor对象
+    # # 使用SVR进行预测
+    # svr_rbf = SVR(kernel='rbf', C=100, gamma=0.1, epsilon=0.1)
+    # svr_lin = SVR(kernel='linear', C=100, epsilon=0.1)
+    # svr_poly = SVR(kernel='poly', C=100, degree=3, epsilon=0.1)
+    #
+    # # 拟合模型
+    # y_rbf = svr_rbf.fit(X, y).predict(X_test)
+    # y_lin = svr_lin.fit(X, y).predict(X_test)
+    # y_poly = svr_poly.fit(X, y).predict(X_test)
+    #
+    #
+    # mae, rmse = evaluation(y_test, y_rbf)
+    # mae1, rmse1 = evaluation(y_test, y_rbf)
+    # mae2, rmse2 = evaluation(y_test, y_rbf)
+
+    regr = AdaBoostRegressor(DecisionTreeRegressor(max_depth=4), n_estimators=300, random_state=0)
+
+    # 拟合模型
+    regr.fit(X, y)
+
+    # 预测
+    y_pred = regr.predict(X_test)
+    mae, rmse = evaluation(y_test, y_pred)
+    # print('mae——{},rmse——{}'.format(mae, rmse))
+    return mae, rmse
+
+
 def train_and_evaluate_nn(Xtrain, y_train, Xtest, y_test):
     # 创建一个简单的前馈神经网络模型
     model = Sequential()
@@ -211,6 +387,9 @@ def train_and_evaluate_nn(Xtrain, y_train, Xtest, y_test):
     rmse = np.sqrt(mean_squared_error(y_test, y_pred))
 
     return mae, rmse
+
+
+
 
 def interaction(x):
     n_features = x.shape[1]
@@ -258,7 +437,7 @@ def getRFfeatures(X,Y,Xtest):
     # 获取特征的重要性分数
     feature_importances = clf.feature_importances_
     # 选择前n个最重要的特征
-    n = 3  # 选择前3个特征，你可以根据需要调整n的值
+    n = 1  # 选择前3个特征，你可以根据需要调整n的值
     selected_feature_indices = np.argsort(feature_importances)[::-1][:n]
     selected_features = X[:, selected_feature_indices]
 
@@ -318,7 +497,7 @@ def getRFE_RFfeatures(X,Y,X_test):
     model = RandomForestRegressor()
 
     # 创建特征递归消除对象
-    rfe = RFE(model, n_features_to_select=4)  # 选择3个最重要的特征
+    rfe = RFE(model, n_features_to_select=3)  # 选择3个最重要的特征
 
     # 使用特征递归消除选择特征
     rfe.fit(X, Y.ravel())
@@ -365,7 +544,7 @@ maelistnoiseemd = []
 rmselistnoiseemd = []
 maelistnoiseemd1 = []
 rmselistnoiseemd1 = []
-for i in range(40):
+for i in range(10):
     random.seed(i)
     Xtrain = X_train
     Xtest = X_test
@@ -373,7 +552,7 @@ for i in range(40):
 
     spman = calculate(Xtrain, y_train)#未加噪声0.74
     # std = random.uniform(0.01, 1)
-    std = 0.8
+    std =0.3
     Xtrain = add_noise(Xtrain, std)#加噪声
     maenoise, rmsenoise = get_result(Xtrain, y_train, Xtest, y_test)
     maelistnoise.append(maenoise)
@@ -383,10 +562,15 @@ for i in range(40):
     # Xtrain, Xtest = Pywt(Xtrain, Xtest)
 
     Xtrain, Xtest = ceemdan(Xtrain, Xtest)
+    # Xtrain, Xtest = seasonal(Xtrain, Xtest)
+    # Xtrain, Xtest = pca(Xtrain, Xtest)
+    # Xtrain, Xtest = lmd(Xtrain, Xtest)
     celllist = []
     for col in range(len(Xtrain[0])):
         column_data = Xtrain[:, col]
         celllist.append(calculate(column_data, y_train))
+
+    print(celllist)
     #使用随机交互森林对特征进行评估
     # feature_importance = rif_feature_importance(Xtrain,y_train, Xtest, 5)
     # print("Feature Importance:")
@@ -395,10 +579,10 @@ for i in range(40):
 
     # Xtrain,Xtest=getRFfeatures(Xtrain,y_train,Xtest)#随机森林
     # Xtrain, Xtest = getReliefFfeatures(Xtrain, y_train, Xtest)#reliefF算法
-    # Xtrain, Xtest = getRFE_RFfeatures(Xtrain, y_train, Xtest)#特征递归消除和随机森林结合
+    Xtrain, Xtest = getRFE_RFfeatures(Xtrain, y_train, Xtest)#特征递归消除和随机森林结合
     # print("到这里是模态分解完毕,使用随机森林进行特征选择,得到的结果作为最终结果")
-    maenoiseemd, rmsenoiseemd = train_and_evaluate_nn(Xtrain, y_train, Xtest, y_test)
-    # maenoiseemd, rmsenoiseemd = get_result(Xtrain, y_train, Xtest, y_test)
+    # maenoiseemd, rmsenoiseemd = train_and_evaluate_nn(Xtrain, y_train, Xtest, y_test)
+    maenoiseemd, rmsenoiseemd = get_result(Xtrain, y_train, Xtest, y_test)
     maelist.append(mae)
     rmselist.append(rmse)
     maelistnoiseemd.append(maenoiseemd)
@@ -420,6 +604,6 @@ print('加噪声em加特征选择算法mae——{},rmse——{}'.format(np.media
 # logging
 # 原始mae——0.06398691535536155,rmse——0.07855878847070456
 # 加噪声mae——0.1393503760683043,rmse——0.18856930717886522
-# 加噪声em加特征选择算法mae——0.12864023210057018,rmse——0.15867174959175068reliefF
-# 加噪声em加特征选择算法mae——0.1274263818656423,rmse——0.15203856024825693随机森林4特征
-# 加噪声em加特征选择算法mae——0.12379297229481223,rmse——0.15590520682781867RFE_RF
+# 原始mae——0.12001764993006375,rmse——0.14471151722066822
+# 加噪声mae——0.13134187678629544,rmse——0.16001055788667376
+# 加噪声em加特征选择算法mae——0.12392748801342557,rmse——0.15999974882375761

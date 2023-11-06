@@ -94,32 +94,341 @@
 # # # 运行随机森林模型并进行预测
 # # accuracy = rif_pred(data_train, data_test, mtry)
 # # print(f"Random Interaction Forest Accuracy: {accuracy}")
+#
+# import pywt
+# import numpy as np
+# import matplotlib.pyplot as plt
+#
+# # 创建一个示例信号
+# signal = np.random.rand(58, 6)
+# # signal = np.array([2, 4, 6, 8, 10, 8, 6, 4, 2, 0, -2, -4, -6, -8, -10, -8])
+#
+# # 小波分解
+# wavelet = "haar"  # 选择小波基函数，这里使用Haar小波
+# level = 2  # 分解的层数
+# coeffs = pywt.wavedec(signal, wavelet, level=level)
+#
+# # 提取逼近系数和细节系数
+# cA2, cD2, cD1 = coeffs
+#
+# # 重构信号
+# reconstructed_signal = pywt.waverec(coeffs, wavelet)
+#
+# # 绘制原始信号和重构信号
+# plt.figure(figsize=(10, 6))
+# plt.subplot(2, 1, 1)
+# plt.plot(signal, label="Original Signal")
+# plt.legend()
+# plt.subplot(2, 1, 2)
+# plt.plot(reconstructed_signal, label="Reconstructed Signal")
+# plt.legend()
+# plt.show()
 
-import pywt
+from PyEMD import CEEMDAN,EMD,EEMD
+
+def ceemdan(X_data):
+    IImfs = []
+    data = X_data.ravel()
+    ceemdan= CEEMDAN()
+    ceemdan.trials = 1  # 迭代次数
+    ceemdan.max_siftings = 18  # SIFT 迭代次数
+    ceemdan.noise_std = 9  # 白噪声标准差
+    ceemdan.ensemble_size=100
+
+    ceemdan.ceemdan(data)
+    imfs, res = ceemdan.get_imfs_and_residue()
+    plt.figure(figsize=(12, 9))
+    plt.subplots_adjust(hspace=0.1)
+    plt.subplot(imfs.shape[0] + 3, 1, 1)
+    plt.plot(data, 'r')
+    for i in range(imfs.shape[0]):
+        plt.subplot(imfs.shape[0] + 3, 1, i + 2)
+        plt.plot(imfs[i], 'g')
+        plt.ylabel("IMF %i" % (i + 1))
+        plt.locator_params(axis='x', nbins=10)
+        # 在函数前必须设置一个全局变量 IImfs=[]
+        IImfs.append(imfs[i])
+    plt.subplot(imfs.shape[0] + 3, 1, imfs.shape[0] + 3)
+    plt.plot(res, 'g')
+
+    return np.transpose(IImfs)
+def calculate(X,Y):
+    r,p=stats.spearmanr(X,Y)
+    return r
+
+from sklearn.decomposition import FastICA
+import pandas as pd
+import statsmodels.api as sm
+import matplotlib.pyplot as plt
 import numpy as np
+import scipy.stats as stats
+import math
+
+# 创建示例时间序列数据
+data = pd.read_csv('rowdata.csv')
+feature2 = np.array(data['HI100_150'])[84:]
+label = np.array(data['Cycle_life'])[84:]
+labellog = []
+for i in label:
+    labellog.append(math.log(i, 10))
+
+labellog = np.array(labellog).reshape(-1, 1)
+# index = pd.date_range(start='2023-01-01', periods=len(feature2), freq='D')
+# ts = pd.Series(feature2, index=index)
+#
+# # 执行时间序列分解
+# result = sm.tsa.seasonal_decompose(ts, model='additive')
+#
+# x = np.column_stack((ts.values, result.trend.values, result.seasonal.values, result.resid.values))
+# x= np.nan_to_num(x, nan=0.0)
+#
+# celllist = []
+# for col in range(len(x[0])):
+#     column_data = x[:, col]
+#     celllist.append(calculate(column_data, label))
+
+# # 绘制分解结果
+# fig, axes = plt.subplots(4, 1, figsize=(10, 8))
+# ts.plot(ax=axes[0], title='Original Time Series')
+# result.trend.plot(ax=axes[1], title='Trend Component')
+# result.seasonal.plot(ax=axes[2], title='Seasonal Component')
+# result.resid.plot(ax=axes[3], title='Residual Component')
+# plt.tight_layout()
+# plt.show()
+
+import numpy as np
+import pywt
 import matplotlib.pyplot as plt
 
-# 创建一个示例信号
-signal = np.random.rand(58, 6)
-# signal = np.array([2, 4, 6, 8, 10, 8, 6, 4, 2, 0, -2, -4, -6, -8, -10, -8])
+# import numpy as np
+#
+# # 假设 x 是一个包含 5 个不同长度列表的列表
+# x = [[1, 2, 3], [4, 5, 6, 7, 8], [9, 10, 11, 12], [13, 14], [15, 16, 17, 18, 19, 20]]
+#
+# # 创建一个空的形状为(40, 5)的数组
+# result = np.zeros((40, 5))
+#
+# # 对每个列表进行线性插值，扩展为长度为40的数组
+# for i, lst in enumerate(x):
+#     # 确定插值的位置
+#     xp = np.arange(len(lst))
+#     fp = np.array(lst)
+#     indices = np.linspace(0, len(lst) - 1, 40)
+#     result[:, i] = np.interp(indices, xp, fp)
+#
+# # result 现在包含了插值后的数组，每一列对应于一个插值后的数组
+# print(result)
 
-# 小波分解
-wavelet = "haar"  # 选择小波基函数，这里使用Haar小波
-level = 2  # 分解的层数
-coeffs = pywt.wavedec(signal, wavelet, level=level)
+import math
 
-# 提取逼近系数和细节系数
-cA2, cD2, cD1 = coeffs
+# 生成信号变量
+# t = np.linspace(0, 1, num=40)
+# signal = np.sin(2 * np.pi * 10 * t) + np.sin(2 * np.pi * 20 * t) + np.sin(3 * np.pi * 30 * t)
+# signal=feature2.ravel()
 
-# 重构信号
-reconstructed_signal = pywt.waverec(coeffs, wavelet)
+# 添加随机噪声
+# noise = np.random.normal(0, 0.05, len(signal))
+# signal = signal + noise
 
-# 绘制原始信号和重构信号
-plt.figure(figsize=(10, 6))
-plt.subplot(2, 1, 1)
-plt.plot(signal, label="Original Signal")
-plt.legend()
-plt.subplot(2, 1, 2)
-plt.plot(reconstructed_signal, label="Reconstructed Signal")
-plt.legend()
-plt.show()
+# 常见的几种小波基函数包括：
+#
+# # 1. Daubechies小波基（db）：Daubechies小波基是最常用的小波基函数之一。它具有紧凑支持和良好的频率局部化特性。常见的Daubechies小波基包括db2、db4、db6等。
+#
+# # 2. Symlets小波基（sym）：Symlets小波基是对称的Daubechies小波基。它们在频率局部化和相位对称性方面与Daubechies小波基类似。常见的Symlets小波基包括sym2、sym4、sym8等。
+#
+# # 3. Coiflets小波基（coif）：Coiflets小波基是具有紧凑支持和较好频率局部化特性的小波基。它们在一些应用中比Daubechies小波基具有更好的性能。常见的Coiflets小波基包括coif1、coif2、coif3等。
+#
+# # 4. Biorthogonal小波基（bior）：Biorthogonal小波基是一组成对的小波基函数。它们具有可变的支持长度和频率响应。常见的Biorthogonal小波基包括bior2.2、bior3.3、bior6.8等。
+#
+# # wavelet_name = 'db4'  # 定义小波基名称为'db4'
+# # wavelet_name = 'sym4'  # 定义小波基名称为'sym4'
+# wavelet_name = 'bior3.3'  # 定义小波基名称为'bior3.3'
+#
+# result = np.zeros((40, 5))
+# # 小波变换
+# coeffs = pywt.wavedec(signal, wavelet_name, level=4)  # 使用指定小波基进行4级小波分解
+# for i, lst in enumerate(coeffs):
+#     # 确定插值的位置
+#     xp = np.arange(len(lst))
+#     fp = np.array(lst)
+#     indices = np.linspace(0, len(lst) - 1, 40)
+#     result[:, i] = np.interp(indices, xp, fp)
+#
+#
+# # 绘制原始信号图像
+# plt.figure(figsize=(8, 6))
+# plt.subplot(5, 1, 1)
+# plt.plot(t, signal)
+# plt.title('Original Signal')
+# plt.xlabel('Time')
+# plt.ylabel('Amplitude')
+#
+#
+#
+# celllist = []
+# # 绘制小波分解信号图像
+# for i in range(len(result[0])):
+#     plt.subplot(5, 1, i + 1)
+#     plt.plot(t[:len(result[:,i])], result[:,i])
+#     print('gjbhnk')
+#     celllist.append(calculate(result[:,i], labellog))
+#     plt.title(f'Wavelet Coefficients - Level {i}')
+#     plt.xlabel('Time')
+#     plt.ylabel('Amplitude')
+#
+#
+#
+#
+# plt.tight_layout()
+# plt.show()
+
+from sklearn.decomposition import KernelPCA
+# ica = FastICA(n_components=1, random_state=0)  # 设置要提取的独立成分数量
+# S_ = ica.fit_transform(feature2.reshape(-1,1))  # S_ 中包含了分离后的独立成分
+#
+# # 将分离出的独立成分添加为数组的列
+# result_array = np.hstack((feature2.reshape(-1,1), S_))
+
+# 创建Kernel PCA模型并拟合数据
+# kpca = KernelPCA(kernel='linear', n_components=1)  # 使用径向基函数（RBF）核来处理非线性关系
+# X_kpca = kpca.fit_transform(feature2.reshape(-1,1))
+# result_array = np.hstack((feature2.reshape(-1,1), X_kpca))
+
+
+from pyswarm import pso
+
+
+# 定义CEEMDAN目标函数，根据CEEMDAN分解结果来评估效果
+from pyswarm import pso
+
+
+# 定义目标函数
+# def ceemdan_objective(parameters):
+#     trials, max_siftings, noise_std = parameters
+#     ceemdan_obj = CEEMDAN()
+#     ceemdan_obj.trials = trials
+#     ceemdan_obj.max_siftings = max_siftings
+#     ceemdan_obj.noise_std = noise_std
+#
+#     ceemdan_obj.ceemdan(data)
+#     imfs, _ = ceemdan_obj.get_imfs_and_residue()
+#
+#     # 这里可以根据需要定义目标函数，例如：最大化与标签的相关性
+#     # 请根据你的实际需求定义目标函数
+#
+#     # 这里假设目标函数为最大化 IMFs 的总能量
+#     total_energy = np.sum(np.square(imfs))
+#     return -total_energy  # PSO算法最小化目标函数，所以加负号来最大化能量
+#
+#
+# # 假设 data 是原始信号
+# data = np.random.rand(124)
+#
+# # 定义参数范围
+# parameter_ranges = [(50, 200), (10, 30), (5, 15)]  # trials, max_siftings, noise_std
+#
+# # 使用PSO算法搜索最佳参数
+# lb = [param[0] for param in parameter_ranges]  # 参数的下界
+# ub = [param[1] for param in parameter_ranges]  # 参数的上界
+#
+# best_params, _ = pso(ceemdan_objective, lb, ub, swarmsize=10, maxiter=100)
+#
+# # 获取最佳参数
+# trials, max_siftings, noise_std = best_params
+#
+# # 使用最佳参数运行CEEMDAN
+# ceemdan_obj = ceemdan.CEEMDAN()
+# ceemdan_obj.trials = trials
+# ceemdan_obj.max_siftings = max_siftings
+# ceemdan_obj.noise_std = noise_std
+# ceemdan_obj.ceemdan(data)
+# imfs, _ = ceemdan_obj.get_imfs_and_residue()
+
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import scipy.stats as stats
+from sklearn import svm
+from sklearn.linear_model import LinearRegression, Ridge, Lasso
+import xgboost
+import random
+from sklearn.decomposition import FastICA
+from sklearn.neural_network import MLPRegressor
+from math import sqrt
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_squared_error
+from xgboost import XGBRegressor
+from sklearn.decomposition import PCA
+from PyEMD import CEEMDAN,EMD,EEMD
+import statistics
+from sklearn.feature_selection import SelectFromModel
+from sklearn.ensemble import RandomForestRegressor
+from saved_xgb_regression_model import OptimizedXGBRegressor
+from sklearn.neighbors import NearestNeighbors
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_selection import RFE
+import pywt
+import tensorflow as tf
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+from tensorflow.python import keras
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.optimizers import Adam
+import statsmodels.api as sm
+def add_noise(arr, std_dev):
+    """
+    给定一个数组和标准差，返回添加了零均值标准差的噪声的新数组。
+
+    参数：
+    arr (numpy.ndarray)：输入数组
+    std_dev (float)：标准差（噪声的幅度）
+
+    返回：
+    numpy.ndarray：带有噪声的新数组
+    """
+    # 生成与输入数组相同形状的随机噪声
+    noise = np.random.normal(0, std_dev, arr.shape)
+
+    # 将噪声添加到输入数组中
+    noisy_arr = arr + noise
+
+    return noisy_arr
+
+def evaluation(y_test, y_predict):
+    mae = mean_absolute_error(y_test, y_predict)
+    mse = mean_squared_error(y_test, y_predict)
+    rmse = sqrt(mean_squared_error(y_test, y_predict))
+    return mae, rmse
+
+
+print(calculate(feature2, labellog))
+
+std = 0.001
+# feature2 = add_noise(feature2, std)#加噪声
+print(calculate(feature2, labellog))
+s_=ceemdan(feature2.reshape(-1,1))
+# result_array=feature2
+result_array = np.hstack((feature2.reshape(-1,1), s_))
+
+celllist = []
+for col in range(len(result_array[0])):
+    column_data = result_array[:, col]
+    celllist.append(calculate(column_data, labellog))
+
+
+
+print(celllist)
+X_train, X_test = result_array[:32,:], result_array[32:,:]
+y_train, y_test = labellog[:32], labellog[32:]
+
+xgb_model = XGBRegressor()
+
+# 拟合数据
+xgb_model.fit(X_train, y_train)
+
+# 预测
+y_pred = xgb_model.predict(X_test)
+
+mae, rmse = evaluation(y_test, y_pred)
+print('mae——{},rmse——{}'.format(mae, rmse))

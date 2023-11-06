@@ -256,7 +256,7 @@ def getRFE_RFfeatures(X,Y,X_test):
     model = RandomForestRegressor()
 
     # 创建特征递归消除对象
-    rfe = RFE(model, n_features_to_select=1)  # 选择3个最重要的特征
+    rfe = RFE(model, n_features_to_select=3)  # 选择3个最重要的特征
 
     # 使用特征递归消除选择特征
     rfe.fit(X, Y.ravel())
@@ -283,7 +283,7 @@ maelistnoiseemd = []
 rmselistnoiseemd = []
 maelistnoiseemd1 = []
 rmselistnoiseemd1 = []
-for i in range(20):
+for i in range(200):
     random.seed(i)
     Xtrain = X_train
     Xtest = X_test
@@ -296,9 +296,9 @@ for i in range(20):
     rmselistnoise.append(rmsenoise)
 
     Xtrain, Xtest = ceemdan(Xtrain, Xtest)
-    Xtrain,Xtest=getRFfeatures(Xtrain,y_train,Xtest)#随机森林
+    # Xtrain,Xtest=getRFfeatures(Xtrain,y_train,Xtest)#随机森林
     # Xtrain, Xtest = getReliefFfeatures(Xtrain, y_train, Xtest)#reliefF算法
-    # Xtrain, Xtest = getRFE_RFfeatures(Xtrain, y_train, Xtest)#特征递归消除和随机森林结合
+    Xtrain, Xtest = getRFE_RFfeatures(Xtrain, y_train, Xtest)#特征递归消除和随机森林结合
     # print("到这里是模态分解完毕,使用随机森林进行特征选择,得到的结果作为最终结果")
     maenoiseemd, rmsenoiseemd = get_result(Xtrain, y_train, Xtest, y_test)
     maelist.append(mae)
@@ -319,4 +319,7 @@ print('加噪声em加特征选择算法mae——{},rmse——{}'.format(np.media
 # 加噪声em加特征选择算法mae——0.11520552147132831,rmse——0.15554476839948772RF
 # 加噪声em加特征选择算法mae——0.11306274689183873,rmse——0.14884054003576788reliefF
 
-
+# 原始mae——0.12837467958092807,rmse——0.16247461710768774
+# 加噪声mae——0.19537310080244222,rmse——0.2525831752896243
+# 加噪声em加特征选择算法mae——0.11410956288137784,rmse——0.1518677213213217随机森林前三
+# 加噪声em加特征选择算法mae——0.11792076763045939,rmse——0.15646767284988014reliefF算法

@@ -157,7 +157,7 @@ rmselistnoise = []
 maelistnoiseemd = []
 rmselistnoiseemd = []
 
-for i in range(100):
+for i in range(10):
     random.seed(i)
     Xtrain=X_train
     Xtest=X_test
