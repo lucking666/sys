@@ -42,6 +42,7 @@ from numpy.fft import fftshift
 from sklearn.svm import SVR
 from sklearn.ensemble import AdaBoostRegressor
 from sklearn.tree import DecisionTreeRegressor
+import copy
 
 
 
@@ -146,7 +147,7 @@ def add_noise(arr, std_dev):
 def ceemdan(X_train, X_test):
     X_data = np.vstack((X_train, X_test))
     IImfs = []
-    data = X_data.ravel()
+    data = copy.deepcopy(X_data).ravel()
     ceemdan= CEEMDAN()
     ceemdan.trials = 100  # 迭代次数
     ceemdan.max_siftings = 50  # SIFT 迭代次数
@@ -168,7 +169,8 @@ def ceemdan(X_train, X_test):
         IImfs.append(imfs[i])
     # plt.subplot(imfs.shape[0] + 3, 1, imfs.shape[0] + 3)
     # plt.plot(res, 'g')
-    X_train, X_test = np.transpose(IImfs)[:32, :], np.transpose(IImfs)[32:, :]
+    new_data=result_array=np.hstack((X_data, np.transpose(IImfs)))
+    X_train, X_test = new_data[:32, :], new_data[32:, :]
     return X_train, X_test
 
 def Pywt(X_train, X_test):
@@ -497,7 +499,7 @@ def getRFE_RFfeatures(X,Y,X_test):
     model = RandomForestRegressor()
 
     # 创建特征递归消除对象
-    rfe = RFE(model, n_features_to_select=3)  # 选择3个最重要的特征
+    rfe = RFE(model, n_features_to_select=4)  # 选择3个最重要的特征
 
     # 使用特征递归消除选择特征
     rfe.fit(X, Y.ravel())
@@ -544,7 +546,7 @@ maelistnoiseemd = []
 rmselistnoiseemd = []
 maelistnoiseemd1 = []
 rmselistnoiseemd1 = []
-for i in range(10):
+for i in range(4):
     random.seed(i)
     Xtrain = X_train
     Xtest = X_test
@@ -552,7 +554,7 @@ for i in range(10):
 
     spman = calculate(Xtrain, y_train)#未加噪声0.74
     # std = random.uniform(0.01, 1)
-    std =0.3
+    std =0.5
     Xtrain = add_noise(Xtrain, std)#加噪声
     maenoise, rmsenoise = get_result(Xtrain, y_train, Xtest, y_test)
     maelistnoise.append(maenoise)
@@ -596,6 +598,6 @@ print('加噪声em加特征选择算法mae——{},rmse——{}'.format(np.media
 
 
 # logging
-# 原始mae——0.12001764993006375,rmse——0.14471151722066822
-# 加噪声mae——0.13112769016004422,rmse——0.15566681512369762
-# 加噪声em加特征选择算法mae——0.11717393884199817,rmse——0.1535013774278759
+# 原始mae——0.11070302347475675,rmse——0.1380520409768065
+# 加噪声mae——0.13298741201693204,rmse——0.18777025676357653
+# 加噪声em加特征选择算法mae——0.11188999898846624,rmse——0.16478837368657784
