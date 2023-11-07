@@ -58,7 +58,7 @@ import copy
 
 
 
-rowdata = pd.read_csv('rowdata_var.csv')
+rowdata = pd.read_csv('rowdata.csv')
 random_data = rowdata
 # random_data=rowdata.sample(frac=1).reset_index(drop=True).iloc[:,1:]
 
@@ -546,15 +546,15 @@ maelistnoiseemd = []
 rmselistnoiseemd = []
 maelistnoiseemd1 = []
 rmselistnoiseemd1 = []
-for i in range(4):
+for i in range(100):
     random.seed(i)
     Xtrain = X_train
     Xtest = X_test
     mae, rmse = get_result(Xtrain, y_train, Xtest, y_test)
 
     spman = calculate(Xtrain, y_train)#未加噪声0.74
-    # std = random.uniform(0.01, 1)
-    std =0.5
+    std = random.uniform(0.01, 1)
+    # std =1
     Xtrain = add_noise(Xtrain, std)#加噪声
     maenoise, rmsenoise = get_result(Xtrain, y_train, Xtest, y_test)
     maelistnoise.append(maenoise)
@@ -598,6 +598,5 @@ print('加噪声em加特征选择算法mae——{},rmse——{}'.format(np.media
 
 
 # logging
-# 原始mae——0.11070302347475675,rmse——0.1380520409768065
-# 加噪声mae——0.13298741201693204,rmse——0.18777025676357653
-# 加噪声em加特征选择算法mae——0.11188999898846624,rmse——0.16478837368657784
+# 原始mae——0.09068857431951866,rmse——0.12329421229404494
+# 加噪声em加特征选择算法mae——0.0884005394381781,rmse——0.12009050175606004
