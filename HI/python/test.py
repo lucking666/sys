@@ -432,3 +432,40 @@ y_pred = xgb_model.predict(X_test)
 
 mae, rmse = evaluation(y_test, y_pred)
 print('mae——{},rmse——{}'.format(mae, rmse))
+
+
+
+
+def rif_feature_importance(data_train, y_train, data_test, mtry):
+    def random_forest_model(data_train, y_train, mtry):
+        rf = RandomForestRegressor(n_estimators=100, max_features=mtry, random_state=1)
+        rf.fit(data_train, y_train)
+        return rf
+
+    rf_model = random_forest_model(data_train, y_train, mtry)
+
+    feature_importance = rf_model.feature_importances_
+
+    feature_importance_dict = {f'feature_{i}': importance for i, importance in enumerate(feature_importance)}
+    sorted_feature_importance = sorted(feature_importance_dict.items(), key=lambda x: x[1], reverse=True)
+
+    return sorted_feature_importance
+
+def getRFE_RFfeatures(X,Y,X_test):
+    model = RandomForestRegressor()
+
+    # 创建特征递归消除对象
+    rfe = RFE(model, n_features_to_select=4)  # 选择3个最重要的特征
+
+    # 使用特征递归消除选择特征
+    rfe.fit(X, Y.ravel())
+
+    # 获取所选择的特征列索引值
+    selected_feature_indices = np.where(rfe.ranking_ == 1)[0]
+
+    print("选择的特征列索引值:", selected_feature_indices)
+
+    X_train=X[:,selected_feature_indices]
+    X__test=X_test[:,selected_feature_indices]
+
+    return X_train,X__test
