@@ -17,16 +17,25 @@ from sklearn.ensemble import RandomForestRegressor
 from saved_xgb_regression_model import OptimizedXGBRegressor
 from sklearn.neighbors import NearestNeighbors
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_selection import RFECV,RFE
+from sklearn.feature_selection import RFECV
 import copy
 
-rowdata = pd.read_csv('rowdata.csv')
-random_data = rowdata
-# random_data=rowdata.sample(frac=1).reset_index(drop=True).iloc[:,1:]
 
-feature1 = np.array(random_data['HI10_100'])
-feature2 = np.array(random_data['HI100_150'])
-label = np.array(random_data['Cycle_life'])
+Battery_list = ['CS2_35', 'CS2_36', 'CS2_37', 'CS2_38']
+Battery = np.load('CALCE.npy', allow_pickle=True)
+Battery = Battery.item()
+
+feature2=Battery['CS2_35']['CCCT']
+label=Battery['CS2_35']['capacity']
+
+#
+# rowdata = pd.read_csv('rowdata.csv')
+# random_data = rowdata
+# # random_data=rowdata.sample(frac=1).reset_index(drop=True).iloc[:,1:]
+#
+# feature1 = np.array(random_data['HI10_100'])
+# feature2 = np.array(random_data['HI100_150'])
+# label = np.array(random_data['Cycle_life'])
 
 # 归一化
 from sklearn.preprocessing import MinMaxScaler
@@ -38,7 +47,7 @@ def normalization(data):
     return data
 
 
-feature1_scale = normalization(feature1)
+# feature1_scale = normalization(feature1)
 feature2_scale = normalization(feature2)
 
 # 对特征和数据进行取对数
@@ -50,9 +59,9 @@ for i in label:
 
 labellog = np.array(labellog).reshape(-1, 1)
 # labellog=np.array(label).reshape(-1, 1)
-feature1_scale = feature1_scale[:]
+# feature1_scale = feature1_scale[:]
 feature2_scale = feature2_scale[:]
-feature_scale = np.concatenate([feature1_scale, feature2_scale], axis=1)
+# feature_scale = np.concatenate([feature1_scale, feature2_scale], axis=1)
 
 # Spearman系数
 
@@ -72,9 +81,9 @@ feature_scale = np.concatenate([feature1_scale, feature2_scale], axis=1)
 # -0.7842766999664926,-0.899444523235248
 
 
-X_train, X_test = feature2_scale[:58, :], feature2_scale[58:84, :]
-y_train, y_test = labellog[:58], labellog[58:84]
-
+X_train, X_test = feature2_scale[:706, :], feature2_scale[706:, :]
+y_train, y_test = labellog[:706], labellog[706:]
+print("数据读取完成")
 
 
 
@@ -86,9 +95,10 @@ def interaction_subtract(x):
     subtracted_cols = []
 
     # 使用两个嵌套循环来计算每一对特征之间的差值
-    for i in range(1,n_features):
-        subtracted_col = x[:, 0] - x[:, i]
-        subtracted_cols.append(subtracted_col)
+    for i in range(n_features):
+        for j in range(i, n_features):
+            subtracted_col = x[:, i] - x[:, j]
+            subtracted_cols.append(subtracted_col)
 
     # 将原始列和相减列合并成新数组 X_
     X_ = np.column_stack([x] + subtracted_cols)
@@ -167,7 +177,7 @@ def ceemdan(X_train, X_test):
     # plt.subplot(imfs.shape[0] + 3, 1, imfs.shape[0] + 3)
     # plt.plot(res, 'g')
     new_data=result_array=np.hstack((X_data, np.transpose(IImfs)))
-    X_train, X_test = new_data[:58, :], new_data[58:84, :]
+    X_train, X_test = new_data[:706, :], new_data[706:, :]
     X_train = interaction_subtract(X_train)
     X_test = interaction_subtract(X_test)
     return X_train, X_test
@@ -295,8 +305,7 @@ def getRFE_RFfeatures(X,Y,X_test):
     model = RandomForestRegressor()
 
     # 创建特征递归消除对象
-    # rfe = RFECV(model,min_features_to_select=1,)   # 选择3个最重要的特征
-    rfe = RFE(model, n_features_to_select=2)
+    rfe = RFECV(model,min_features_to_select=1,)   # 选择3个最重要的特征
 
     # 使用特征递归消除选择特征
     rfe.fit(X, Y.ravel())
@@ -331,8 +340,8 @@ for i in range(10):
     Xtrain = X_train
     Xtest = X_test
     mae, rmse = get_result(Xtrain, y_train, Xtest, y_test)
-    std = random.uniform(0.2, 0.8)
-    std = 0.4
+    std = random.uniform(0.01, 1)
+    # std = 0.4
     Xtrain = add_noise(Xtrain, std)#加噪声
     maenoise, rmsenoise = get_result(Xtrain, y_train, Xtest, y_test)
     maelistnoise.append(maenoise)
@@ -345,8 +354,8 @@ for i in range(10):
         celllist.append(calculate(column_data, y_train))
     print(celllist)
     Xtrain__,Xtest__,index=getRFfeatures(Xtrain,y_train,Xtest)#随机森林
-    # Xtrain = np.delete(Xtrain, index, axis=1)
-    # Xtest = np.delete(Xtest, index, axis=1)
+    Xtrain = np.delete(Xtrain, index, axis=1)
+    Xtest = np.delete(Xtest, index, axis=1)
     # Xtrain, Xtest = getReliefFfeatures(Xtrain, y_train, Xtest)#reliefF算法
     Xtrain, Xtest = getRFE_RFfeatures(Xtrain, y_train, Xtest)#特征递归消除和随机森林结合
     Xtrain = np.hstack((Xtrain__, Xtrain))
@@ -357,12 +366,10 @@ for i in range(10):
     rmselist.append(rmse)
     maelistnoiseemd.append(maenoiseemd)
     rmselistnoiseemd.append(rmsenoiseemd)
-    print(std,maenoiseemd,rmsenoiseemd)
 
-print(maelistnoiseemd,rmselistnoiseemd)
 print('原始mae——{},rmse——{}'.format(np.median(maelist), np.median(rmselist)))
 print('加噪声mae——{},rmse——{}'.format(np.median(maelistnoise), np.median(rmselistnoise)))
-print('加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd), np.median(rmselistnoiseemd)))
+print('加噪声em加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd), np.median(rmselistnoiseemd)))
 
 # 未打乱噪声随机（0.1-1）100
 # 原始mae——0.06506055792111122,rmse——0.08479516256745924
@@ -373,17 +380,12 @@ print('加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(
 
 
 
+# 未进行log化
+# 原始mae原始mae——96.91624215932993,rmse——122.06565273117249
+# 加噪声加噪声mae——268.7825757540189,rmse——326.8128460743167
+# RFE——RF:1个特征加噪声em加特征选择算法mae——31.650313744178185,rmse——52.71005811134021
 
 
-# 原始mae——0.06506055792111122,rmse——0.08479516256745924
+# 原始mae——0.07626382099552978,rmse——0.09489795403125668
 # 加噪声mae——0.18122681110996794,rmse——0.21347582073615085
 # 加噪声em加特征选择算法mae——0.03186961058367377,rmse——0.04566757598901475
-
-# 选择分量之间不作差
-# 原始mae——0.06506055792111122,rmse——0.08479516256745924
-# 加噪声mae——0.18763482697384215,rmse——0.2571905608044288
-# 加噪声加特征选择算法mae——0.029312993367365685,rmse——0.044428359339593965
-
-# 无噪声特征选择
-# 原始mae——0.06506055792111122,rmse——0.08479516256745924
-# 加特征选择算法mae——0.05479306457461163,rmse——0.06748110571603615

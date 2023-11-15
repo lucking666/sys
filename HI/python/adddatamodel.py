@@ -17,8 +17,9 @@ from sklearn.ensemble import RandomForestRegressor
 from saved_xgb_regression_model import OptimizedXGBRegressor
 from sklearn.neighbors import NearestNeighbors
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_selection import RFE
-
+from sklearn.feature_selection import RFECV
+import copy
+import scipy.stats as stats
 
 rowdata = pd.read_csv('rowdata.csv')
 random_data = rowdata
@@ -81,6 +82,7 @@ y_train, y_test = labellog[:99], labellog[99:]
 
 
 def add_noise(arr, std_dev):
+    random.seed(std_dev)
     """
     给定一个数组和标准差，返回添加了零均值标准差的噪声的新数组。
 
@@ -101,12 +103,32 @@ def add_noise(arr, std_dev):
 
 
 # 加噪声
+def interaction_subtract(x):
+    n_features = x.shape[1]
 
+    # 初始化一个空的列表来存储相减列
+    subtracted_cols = []
+
+    # 使用两个嵌套循环来计算每一对特征之间的差值
+    for i in range(n_features):
+        for j in range(i, n_features):
+            subtracted_col = x[:, i] - x[:, j]
+            subtracted_cols.append(subtracted_col)
+
+    # 将原始列和相减列合并成新数组 X_
+    X_ = np.column_stack([x] + subtracted_cols)
+
+    return X_
 def ceemdan(X_train, X_test):
     X_data = np.vstack((X_train, X_test))
     IImfs = []
-    data = X_data.ravel()
-    ceemdan = CEEMDAN()
+    data = copy.deepcopy(X_data).ravel()
+    ceemdan= CEEMDAN()
+    ceemdan.trials = 100  # 迭代次数
+    ceemdan.max_siftings = 50  # SIFT 迭代次数
+    ceemdan.noise_std = 0.01  # 白噪声标准差
+    ceemdan.ensemble_size=5
+
     ceemdan.ceemdan(data)
     imfs, res = ceemdan.get_imfs_and_residue()
     # plt.figure(figsize=(12, 9))
@@ -122,7 +144,10 @@ def ceemdan(X_train, X_test):
         IImfs.append(imfs[i])
     # plt.subplot(imfs.shape[0] + 3, 1, imfs.shape[0] + 3)
     # plt.plot(res, 'g')
-    X_train, X_test = np.array(np.transpose(IImfs))[:99, :], np.array(np.transpose(IImfs))[99:, :]
+    new_data=result_array=np.hstack((X_data, np.transpose(IImfs)))
+    X_train, X_test = new_data[:99, :], new_data[99:, :]
+    X_train = interaction_subtract(X_train)
+    X_test = interaction_subtract(X_test)
     return X_train, X_test
 
 
@@ -200,19 +225,19 @@ def getRFfeatures(X,Y,Xtest):
 
     # 获取特征的重要性分数
     feature_importances = clf.feature_importances_
-    # 选择前n个最重要的特征
-    n = 3  # 选择前3个特征，你可以根据需要调整n的值
-    selected_feature_indices = np.argsort(feature_importances)[::-1][:n]
-    selected_features = X[:, selected_feature_indices]
-
+    selected_feature_indices = np.array(np.where(np.abs(feature_importances)>0.4)).ravel()
     # 打印被选择的特征的索引和特征值
     print("被选择的特征的索引：", selected_feature_indices)
+    selected_features = X[:, selected_feature_indices]
     # print("被选择的特征：", selected_features)
     X=selected_features
     selected_columns = Xtest[:, selected_feature_indices]
 
 
-    return X,selected_columns
+
+    return X,selected_columns,selected_feature_indices
+
+
 
 def reliefF(X, y, k):
     n_samples, n_features = X.shape
@@ -256,7 +281,7 @@ def getRFE_RFfeatures(X,Y,X_test):
     model = RandomForestRegressor()
 
     # 创建特征递归消除对象
-    rfe = RFE(model, n_features_to_select=3)  # 选择3个最重要的特征
+    rfe = RFECV(model,min_features_to_select=1,)  # 选择3个最重要的特征
 
     # 使用特征递归消除选择特征
     rfe.fit(X, Y.ravel())
@@ -272,7 +297,9 @@ def getRFE_RFfeatures(X,Y,X_test):
 
     return X_train,X__test
 
-
+def calculate(X,Y):
+    r,p=stats.spearmanr(X,Y)
+    return r
 
 
 maelist = []
@@ -283,33 +310,46 @@ maelistnoiseemd = []
 rmselistnoiseemd = []
 maelistnoiseemd1 = []
 rmselistnoiseemd1 = []
-for i in range(200):
+for i in range(10):
     random.seed(i)
     Xtrain = X_train
     Xtest = X_test
     mae, rmse = get_result(Xtrain, y_train, Xtest, y_test)
-    std = random.uniform(0.01, 1)
-    # std = 0.05
-    Xtrain = add_noise(Xtrain, std)#加噪声
+    std = random.uniform(0.2, 0.8)
+
+    # std = 0.1
+
+    # Xtrain = add_noise(Xtrain, std)#加噪声
     maenoise, rmsenoise = get_result(Xtrain, y_train, Xtest, y_test)
     maelistnoise.append(maenoise)
     rmselistnoise.append(rmsenoise)
 
     Xtrain, Xtest = ceemdan(Xtrain, Xtest)
-    # Xtrain,Xtest=getRFfeatures(Xtrain,y_train,Xtest)#随机森林
+
+    celllist = []
+    for col in range(len(Xtrain[0])):
+        column_data = Xtrain[:, col]
+        celllist.append(calculate(column_data, y_train))
+    print(celllist)
+    Xtrain__, Xtest__, index = getRFfeatures(Xtrain, y_train, Xtest)  # 随机森林
+    Xtrain = np.delete(Xtrain, index, axis=1)
+    Xtest = np.delete(Xtest, index, axis=1)
     # Xtrain, Xtest = getReliefFfeatures(Xtrain, y_train, Xtest)#reliefF算法
     Xtrain, Xtest = getRFE_RFfeatures(Xtrain, y_train, Xtest)#特征递归消除和随机森林结合
+    Xtrain=np.hstack((Xtrain__,Xtrain))
+    Xtest=np.hstack((Xtest__,Xtest))
     # print("到这里是模态分解完毕,使用随机森林进行特征选择,得到的结果作为最终结果")
     maenoiseemd, rmsenoiseemd = get_result(Xtrain, y_train, Xtest, y_test)
     maelist.append(mae)
     rmselist.append(rmse)
     maelistnoiseemd.append(maenoiseemd)
     rmselistnoiseemd.append(rmsenoiseemd)
+    print(std,maenoiseemd,rmsenoiseemd)
 
 print('原始mae——{},rmse——{}'.format(np.median(maelist), np.median(rmselist)))
 print('加噪声mae——{},rmse——{}'.format(np.median(maelistnoise), np.median(rmselistnoise)))
 print('加噪声em加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd), np.median(rmselistnoiseemd)))
-
+print(maelistnoiseemd,rmselistnoiseemd)
 
 # 所有数据
 # RFE_RF(1):
@@ -323,3 +363,8 @@ print('加噪声em加特征选择算法mae——{},rmse——{}'.format(np.media
 # 加噪声mae——0.19537310080244222,rmse——0.2525831752896243
 # 加噪声em加特征选择算法mae——0.11410956288137784,rmse——0.1518677213213217随机森林前三
 # 加噪声em加特征选择算法mae——0.11792076763045939,rmse——0.15646767284988014reliefF算法
+
+
+# 原始mae——0.12837467958092807,rmse——0.16247461710768774
+# 加噪声mae——0.25750862829506616,rmse——0.28988990684706284
+# 加噪声em加特征选择算法mae——0.10816940744928091,rmse——0.14180057934280685RF_RFECV

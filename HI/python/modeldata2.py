@@ -20,7 +20,7 @@ from sklearn.ensemble import RandomForestRegressor
 from saved_xgb_regression_model import OptimizedXGBRegressor
 from sklearn.neighbors import NearestNeighbors
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_selection import RFECV
+from sklearn.feature_selection import RFECV,RFE
 import pywt
 import tensorflow as tf
 from sklearn.metrics import mean_absolute_error, mean_squared_error
@@ -43,7 +43,7 @@ from sklearn.svm import SVR
 from sklearn.ensemble import AdaBoostRegressor
 from sklearn.tree import DecisionTreeRegressor
 import copy
-
+import usesdafordatatest2
 
 
 
@@ -119,6 +119,22 @@ y_train, y_test = labellog[84:116], labellog[116:]
 
 
 
+# def interaction_subtract(x):
+#     n_features = x.shape[1]
+#
+#     # 初始化一个空的列表来存储相减列
+#     subtracted_cols = []
+#
+#     # 使用两个嵌套循环来计算每一对特征之间的差值
+#     for i in range(n_features):
+#         for j in range(i, n_features):
+#             subtracted_col = x[:, i] - x[:, j]
+#             subtracted_cols.append(subtracted_col)
+#
+#     # 将原始列和相减列合并成新数组 X_
+#     X_ = np.column_stack([x] + subtracted_cols)
+#
+#     return X_
 def interaction_subtract(x):
     n_features = x.shape[1]
 
@@ -126,18 +142,16 @@ def interaction_subtract(x):
     subtracted_cols = []
 
     # 使用两个嵌套循环来计算每一对特征之间的差值
-    for i in range(n_features):
-        for j in range(i, n_features):
-            subtracted_col = x[:, i] - x[:, j]
-            subtracted_cols.append(subtracted_col)
+    for i in range(1,n_features):
+        subtracted_col = x[:, 0] - x[:, i]
+        subtracted_cols.append(subtracted_col)
 
     # 将原始列和相减列合并成新数组 X_
     X_ = np.column_stack([x] + subtracted_cols)
 
     return X_
 
-
-def add_noise(arr, std_dev):
+def add_noise(arr, std_dev,index):
     """
     给定一个数组和标准差，返回添加了零均值标准差的噪声的新数组。
 
@@ -149,8 +163,9 @@ def add_noise(arr, std_dev):
     numpy.ndarray：带有噪声的新数组
     """
     # 生成与输入数组相同形状的随机噪声
-    random.seed(std_dev)
+    np.random.seed(0)
     noise = np.random.normal(0, std_dev, arr.shape)
+    # print(noise)
 
     # 将噪声添加到输入数组中
     noisy_arr = arr + noise
@@ -160,38 +175,16 @@ def add_noise(arr, std_dev):
 
 # 加噪声
 
-def ceemdan(X_train, X_test,t):
-    X_data = np.vstack((X_train, X_test))
-    IImfs = []
-    data = copy.deepcopy(X_data).ravel()
-    ceemdan= CEEMDAN()
-    ceemdan.trials = 100  # 迭代次数
-    ceemdan.max_siftings = 50  # SIFT 迭代次数
-    ceemdan.noise_std = 0.01  # 白噪声标准差
-    ceemdan.ensemble_size=5
+def _SDA(X_train,y_train,X_test):
+    # 示例用法
+    config = usesdafordatatest2.Config()
 
-    ceemdan.ceemdan(data)
-    imfs, res = ceemdan.get_imfs_and_residue()
-    # plt.figure(figsize=(12, 9))
-    # plt.subplots_adjust(hspace=0.1)
-    # plt.subplot(imfs.shape[0] + 3, 1, 1)
-    # plt.plot(data, 'r')
-    for i in range(imfs.shape[0]):
-        # plt.subplot(imfs.shape[0] + 3, 1, i + 2)
-        # plt.plot(imfs[i], 'g')
-        # plt.ylabel("IMF %i" % (i + 1))
-        # plt.locator_params(axis='x', nbins=10)
-        # 在函数前必须设置一个全局变量 IImfs=[]
-        IImfs.append(imfs[i])
-    # plt.subplot(imfs.shape[0] + 3, 1, imfs.shape[0] + 3)
-    # plt.plot(res, 'g')
-    new_data=result_array=np.hstack((t,X_data, np.transpose(IImfs)))
-    X_train, X_test = new_data[:32, :], new_data[32:, :]
-    X_train = interaction_subtract(X_train)
-    X_test = interaction_subtract(X_test)
-    return X_train, X_test
+    denoised_X_train, denoised_X_test = usesdafordatatest2.train_and_denoise(X_train, y_train, X_test, config)
 
-# def ceemdan(X_train, X_test):
+    return denoised_X_train,denoised_X_test
+
+
+# def ceemdan(X_train, X_test,t):
 #     X_data = np.vstack((X_train, X_test))
 #     IImfs = []
 #     data = copy.deepcopy(X_data).ravel()
@@ -216,11 +209,45 @@ def ceemdan(X_train, X_test,t):
 #         IImfs.append(imfs[i])
 #     # plt.subplot(imfs.shape[0] + 3, 1, imfs.shape[0] + 3)
 #     # plt.plot(res, 'g')
-#     new_data=result_array=np.hstack((X_data, np.transpose(IImfs)))
-#     X_train, X_test = np.transpose(IImfs)[:32, :], np.transpose(IImfs)[32:, :]
+#     new_data=result_array=np.hstack((t,X_data, np.transpose(IImfs)))
+#     X_train, X_test = new_data[:len(X_train), :], new_data[len(X_train):, :]
 #     X_train = interaction_subtract(X_train)
 #     X_test = interaction_subtract(X_test)
 #     return X_train, X_test
+
+def ceemdan(X_train, X_test):
+    X_data = np.vstack((X_train, X_test))
+    IImfs = []
+    data = copy.deepcopy(X_data).ravel()
+    ceemdan= CEEMDAN()
+    ceemdan.trials = 1  # 迭代次数
+    ceemdan.max_siftings = 1  # SIFT 迭代次数
+    ceemdan.noise_std = 0.605 # 白噪声标准差
+    ceemdan.ensemble_size=1
+
+    ceemdan.ceemdan(data)
+    imfs, res = ceemdan.get_imfs_and_residue()
+    # plt.figure(figsize=(12, 9))
+    # plt.subplots_adjust(hspace=0.1)
+    # plt.subplot(imfs.shape[0] + 3, 1, 1)
+    # plt.plot(data, 'r')
+    for i in range(imfs.shape[0]):
+        # plt.subplot(imfs.shape[0] + 3, 1, i + 2)
+        # plt.plot(imfs[i], 'g')
+        # plt.ylabel("IMF %i" % (i + 1))
+        # plt.locator_params(axis='x', nbins=10)
+        # 在函数前必须设置一个全局变量 IImfs=[]
+        IImfs.append(imfs[i])
+    # plt.subplot(imfs.shape[0] + 3, 1, imfs.shape[0] + 3)
+    # plt.plot(res, 'g')
+    result_array=np.transpose(IImfs)
+    new_data=np.hstack((X_data, np.transpose(IImfs)))
+    X_train, X_test = new_data[:len(X_train), :], new_data[len(X_train):, :]
+    X_train = interaction_subtract(X_train)
+    X_test = interaction_subtract(X_test)
+    # X_train = np.delete(X_train, np.where(~X_train.any(axis=0))[0], axis=1)
+    # X_test = np.delete(X_test, np.where(~X_test.any(axis=0))[0], axis=1)
+    return X_train, X_test
 
 def Pywt(X_train, X_test):
     X_data = np.vstack((X_train, X_test))
@@ -236,8 +263,8 @@ def Pywt(X_train, X_test):
     X_data_reconstructed = pywt.waverec(coeffs, wavelet)
 
     # 拆分重构后的数据回到训练集和测试集
-    X_train_reconstructed = X_data_reconstructed[:32, :]
-    X_test_reconstructed = X_data_reconstructed[32:, :]
+    X_train_reconstructed = X_data_reconstructed[:len(X_train), :]
+    X_test_reconstructed = X_data_reconstructed[len(X_train):, :]
 
     return X_train_reconstructed, X_test_reconstructed
 
@@ -479,10 +506,10 @@ def getRFfeatures(X,Y,Xtest):
     # 获取特征的重要性分数
     feature_importances = clf.feature_importances_
     # 选择前n个最重要的特征
-    # n = 4  # 选择前3个特征，你可以根据需要调整n的值
-    # temp=np.argsort(feature_importances)[::-1]
-    # selected_feature_indices = temp[:n]
-    selected_feature_indices = np.array(np.where(abs(feature_importances)>0.4)).ravel()
+    n = 2  # 选择前3个特征，你可以根据需要调整n的值
+    temp=np.argsort(feature_importances)[::-1]
+    selected_feature_indices = temp[:n]
+    # selected_feature_indices = np.array(np.where(np.abs(feature_importances)>0.5)).ravel()
     # 打印被选择的特征的索引和特征值
     print("被选择的特征的索引：", selected_feature_indices)
     selected_features = X[:, selected_feature_indices]
@@ -540,8 +567,8 @@ def getRFE_RFfeatures(X,Y,X_test):
     model = RandomForestRegressor()
 
     # 创建特征递归消除对象
-    rfe = RFECV(model,min_features_to_select=1,)
-
+    # rfe = RFECV(model,min_features_to_select=1,)
+    rfe = RFE(model, n_features_to_select=2 )
 
 
     # 使用特征递归消除选择特征
@@ -591,33 +618,34 @@ rmselistnoiseemd = []
 maelistnoiseemd1 = []
 rmselistnoiseemd1 = []
 for i in range(10):
-    # random.seed(i)
+    random.seed(i)
     t=np.vstack((X_train, X_test))
     Xtrain = X_train
     Xtest = X_test
     mae, rmse = get_result(Xtrain, y_train, Xtest, y_test)
 
-    spman = calculate(Xtrain, y_train)#未加噪声0.74
-    std = random.uniform(0.2, 1)
-    print(std)
+    spman = calculate(Xtrain, y_train)#未加噪声
+    std = random.uniform(0.001, 0.1)
 
 
-    # std =0.03430511718564626
+    std =0.005
     # print(std)
-    Xtrain = add_noise(Xtrain, std)#加噪声
+    # Xtrain = add_noise(Xtrain, std,i)#加噪声
     maenoise, rmsenoise = get_result(Xtrain, y_train, Xtest, y_test)
     maelistnoise.append(maenoise)
     rmselistnoise.append(rmsenoise)
-    spman=calculate(Xtrain,y_train)#加噪声之后0.58
+    spman=calculate(Xtrain,y_train)
 
     # Xtrain, Xtest = Pywt(Xtrain, Xtest)
 
-    Xtrain, Xtest = ceemdan(Xtrain, Xtest,t)
-    # Xtrain, Xtest = ceemdan(Xtrain, Xtest)
+    # Xtrain, Xtest = ceemdan(Xtrain, Xtest,t)
+    # Xtrain, Xtest = _SDA(Xtrain, y_train, Xtest)
+
+    Xtrain, Xtest = ceemdan(Xtrain, Xtest)
 
     # Xtrain, Xtest = seasonal(Xtrain, Xtest)
     # Xtrain, Xtest = pca(Xtrain, Xtest)
-    # Xtrain, Xtest = lmd(Xtrain, Xtest)
+    # Xtrain, Xtest =  lmd(Xtrain, Xtest)
 
     celllist = []
     for col in range(len(Xtrain[0])):
@@ -630,7 +658,7 @@ for i in range(10):
     # for feature, importance in feature_importance:
     #     print(f"{feature}: {importance}")
 
-    # Xtrain__,Xtest__,index=getRFfeatures(Xtrain,y_train,Xtest)#随机森林
+    Xtrain,Xtest,index=getRFfeatures(Xtrain,y_train,Xtest)#随机森林
     # Xtrain=np.delete(Xtrain, index, axis=1)
     # Xtest=np.delete(Xtest,index,axis=1)
 
@@ -639,22 +667,29 @@ for i in range(10):
 
     # Xtrain=np.hstack((Xtrain__,Xtrain))
     # Xtest=np.hstack((Xtest__,Xtest))
-    # print("到这里是模态分解完毕,使用随机森林进行特征选择,得到的结果作为最终结果")
+
     # maenoiseemd, rmsenoiseemd = train_and_evaluate_nn(Xtrain, y_train, Xtest, y_test)
     maenoiseemd, rmsenoiseemd = get_result(Xtrain, y_train, Xtest, y_test)
     maelist.append(mae)
     rmselist.append(rmse)
     maelistnoiseemd.append(maenoiseemd)
     rmselistnoiseemd.append(rmsenoiseemd)
+    print(std,maenoiseemd,rmsenoiseemd)
 
 print(maelistnoiseemd,rmselistnoiseemd)
 print('原始mae——{},rmse——{}'.format(np.median(maelist), np.median(rmselist)))
 print('加噪声mae——{},rmse——{}'.format(np.median(maelistnoise), np.median(rmselistnoise)))
-print('加噪声em加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd), np.median(rmselistnoiseemd)))
+print('加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd), np.median(rmselistnoiseemd)))
 
 
 
 
 # logging
 # 原始mae——0.09068857431951866,rmse——0.12329421229404494
-# 加噪声em加特征选择算法mae——0.0884005394381781,rmse——0.12009050175606004
+# 加噪声mae——0.11363843872574869,rmse——0.14422112406943496
+# 加噪声em加特征选择算法mae——0.08149184805587845,rmse——0.11195285068127579
+
+# 选择分量之间不作差
+# 原始mae——0.09068857431951866,rmse——0.12329421229404494
+# 加噪声mae——0.13573925716117935,rmse——0.1624299358420838
+# 加噪声加特征选择算法mae——0.12013542846033021,rmse——0.1443557576036395
