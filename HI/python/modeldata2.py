@@ -142,9 +142,14 @@ def interaction_subtract(x):
     subtracted_cols = []
 
     # 使用两个嵌套循环来计算每一对特征之间的差值
-    for i in range(1,n_features):
-        subtracted_col = x[:, 0] - x[:, i]
-        subtracted_cols.append(subtracted_col)
+    # for i in range(1,n_features):
+    #     subtracted_col = x[:, 0] - x[:, i]
+    #     subtracted_cols.append(subtracted_col)
+    # 使用两个嵌套循环来计算每一对特征之间的差值
+    for i in range(n_features):
+        for j in range(i, n_features):
+            subtracted_col = x[:, i] - x[:, j]
+            subtracted_cols.append(subtracted_col)
 
     # 将原始列和相减列合并成新数组 X_
     X_ = np.column_stack([x] + subtracted_cols)
@@ -564,11 +569,11 @@ def getReliefFfeatures(X,Y,X_test):
 
 
 def getRFE_RFfeatures(X,Y,X_test):
-    model = RandomForestRegressor()
+    model = XGBRegressor()
 
     # 创建特征递归消除对象
     # rfe = RFECV(model,min_features_to_select=1,)
-    rfe = RFE(model, n_features_to_select=2 )
+    rfe = RFE(model, n_features_to_select=3 )
 
 
     # 使用特征递归消除选择特征
@@ -617,79 +622,81 @@ maelistnoiseemd = []
 rmselistnoiseemd = []
 maelistnoiseemd1 = []
 rmselistnoiseemd1 = []
-for i in range(10):
-    random.seed(i)
-    t=np.vstack((X_train, X_test))
-    Xtrain = X_train
-    Xtest = X_test
-    mae, rmse = get_result(Xtrain, y_train, Xtest, y_test)
-
-    spman = calculate(Xtrain, y_train)#未加噪声
-    std = random.uniform(0.001, 0.1)
 
 
-    std =0.005
-    # print(std)
-    # Xtrain = add_noise(Xtrain, std,i)#加噪声
-    maenoise, rmsenoise = get_result(Xtrain, y_train, Xtest, y_test)
-    maelistnoise.append(maenoise)
-    rmselistnoise.append(rmsenoise)
-    spman=calculate(Xtrain,y_train)
+noisemaelistnoise=[]
+noisermselistnoise = []
+noisemaelistnoiseemd=[]
+noisermselistnoiseemd = []
 
-    # Xtrain, Xtest = Pywt(Xtrain, Xtest)
+train_array = np.arange(0.01, 1, 0.01)
+for std in train_array:
+    for i in range(20):
+        random.seed(i)
+        Xtrain = X_train
+        Xtest = X_test
+        mae, rmse = get_result(Xtrain, y_train, Xtest, y_test)
 
-    # Xtrain, Xtest = ceemdan(Xtrain, Xtest,t)
-    # Xtrain, Xtest = _SDA(Xtrain, y_train, Xtest)
+        Xtrain = add_noise(Xtrain, std,i)#加噪声
+        maenoise, rmsenoise = get_result(Xtrain, y_train, Xtest, y_test)
+        maelistnoise.append(maenoise)
+        rmselistnoise.append(rmsenoise)
 
-    Xtrain, Xtest = ceemdan(Xtrain, Xtest)
-
-    # Xtrain, Xtest = seasonal(Xtrain, Xtest)
-    # Xtrain, Xtest = pca(Xtrain, Xtest)
-    # Xtrain, Xtest =  lmd(Xtrain, Xtest)
-
-    celllist = []
-    for col in range(len(Xtrain[0])):
-        column_data = Xtrain[:, col]
-        celllist.append(calculate(column_data, y_train))
-    print(celllist)
-    #使用随机交互森林对特征进行评估
-    # feature_importance = rif_feature_importance(Xtrain,y_train, Xtest, 5)
-    # print("Feature Importance:")
-    # for feature, importance in feature_importance:
-    #     print(f"{feature}: {importance}")
-
-    Xtrain,Xtest,index=getRFfeatures(Xtrain,y_train,Xtest)#随机森林
-    # Xtrain=np.delete(Xtrain, index, axis=1)
-    # Xtest=np.delete(Xtest,index,axis=1)
-
-    # Xtrain, Xtest = getReliefFfeatures(Xtrain, y_train, Xtest)#reliefF算法
-    Xtrain, Xtest = getRFE_RFfeatures(Xtrain, y_train, Xtest)#特征递归消除和随机森林结合
-
-    # Xtrain=np.hstack((Xtrain__,Xtrain))
-    # Xtest=np.hstack((Xtest__,Xtest))
-
-    # maenoiseemd, rmsenoiseemd = train_and_evaluate_nn(Xtrain, y_train, Xtest, y_test)
-    maenoiseemd, rmsenoiseemd = get_result(Xtrain, y_train, Xtest, y_test)
-    maelist.append(mae)
-    rmselist.append(rmse)
-    maelistnoiseemd.append(maenoiseemd)
-    rmselistnoiseemd.append(rmsenoiseemd)
-    print(std,maenoiseemd,rmsenoiseemd)
-
-print(maelistnoiseemd,rmselistnoiseemd)
-print('原始mae——{},rmse——{}'.format(np.median(maelist), np.median(rmselist)))
-print('加噪声mae——{},rmse——{}'.format(np.median(maelistnoise), np.median(rmselistnoise)))
-print('加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd), np.median(rmselistnoiseemd)))
+        Xtrain, Xtest = ceemdan(Xtrain, Xtest)
+        celllist = []
+        for col in range(len(Xtrain[0])):
+            column_data = Xtrain[:, col]
+            celllist.append(calculate(column_data, y_train))
+        print(celllist)
+        Xtrain__, Xtest__, index = getRFfeatures(Xtrain, y_train, Xtest)  # 随机森林
+        # Xtrain = np.delete(Xtrain, index, axis=1)
+        # Xtest = np.delete(Xtest, index, axis=1)
+        # Xtrain, Xtest = getReliefFfeatures(Xtrain, y_train, Xtest)#reliefF算法
+        Xtrain, Xtest = getRFE_RFfeatures(Xtrain, y_train, Xtest)  # 特征递归消除和随机森林结合
+        Xtrain = np.hstack((Xtrain__, Xtrain))
+        Xtest = np.hstack((Xtest__, Xtest))
+        # print("到这里是模态分解完毕,使用随机森林进行特征选择,得到的结果作为最终结果")
+        maenoiseemd, rmsenoiseemd = get_result(Xtrain, y_train, Xtest, y_test)
+        maelist.append(mae)
+        rmselist.append(rmse)
+        maelistnoiseemd.append(maenoiseemd)
+        rmselistnoiseemd.append(rmsenoiseemd)
+        print(std, maenoiseemd, rmsenoiseemd)
+    noisemaelistnoise.append(np.median(maelistnoise))
+    noisermselistnoise.append(np.median(rmselistnoise))
+    noisemaelistnoiseemd.append(np.median(maelistnoiseemd))
+    noisermselistnoiseemd.append(np.median(rmselistnoiseemd))
 
 
+print(noisemaelistnoiseemd,noisermselistnoiseemd)
+# print('原始mae——{},rmse——{}'.format(np.median(maelist), np.median(rmselist)))
+# print('加噪声mae——{},rmse——{}'.format(np.median(maelistnoise), np.median(rmselistnoise)))
+# print('加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd), np.median(rmselistnoiseemd)))
+
+plt.plot(train_array, noisermselistnoiseemd, label='CEEMDAN_XGB')
+plt.plot(train_array, noisermselistnoise, label='XGB')
+
+# 添加标题和标签
+plt.title('feature selection effect')
+plt.xlabel('noise_level')
+plt.ylabel('RMSE')
+# 添加图例
+plt.legend()
+
+# 显示图形
+plt.show()
 
 
 # logging
 # 原始mae——0.09068857431951866,rmse——0.12329421229404494
-# 加噪声mae——0.11363843872574869,rmse——0.14422112406943496
-# 加噪声em加特征选择算法mae——0.08149184805587845,rmse——0.11195285068127579
+# 加噪声mae——0.1986921957693864,rmse——0.23455732667975285
+# 加噪声em加特征选择算法mae——0.08519388034371439,rmse——0.1140000506487575
 
 # 选择分量之间不作差
 # 原始mae——0.09068857431951866,rmse——0.12329421229404494
-# 加噪声mae——0.13573925716117935,rmse——0.1624299358420838
-# 加噪声加特征选择算法mae——0.12013542846033021,rmse——0.1443557576036395
+# 加噪声mae——0.1986921957693864,rmse——0.23455732667975285
+# 加噪声加特征选择算法mae——0.0879184086563975,rmse——0.11830634606823125
+
+# 无噪声特征选择
+# 原始mae——0.09068857431951866,rmse——0.12329421229404494
+# 加噪声加特征选择算法mae——0.09635384479173109,rmse——0.12343616614668557

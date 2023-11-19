@@ -326,44 +326,68 @@ maelistnoiseemd = []
 rmselistnoiseemd = []
 maelistnoiseemd1 = []
 rmselistnoiseemd1 = []
-for i in range(10):
-    random.seed(i)
-    Xtrain = X_train
-    Xtest = X_test
-    mae, rmse = get_result(Xtrain, y_train, Xtest, y_test)
-    std = random.uniform(0.2, 0.8)
-    std = 0.4
-    Xtrain = add_noise(Xtrain, std)#加噪声
-    maenoise, rmsenoise = get_result(Xtrain, y_train, Xtest, y_test)
-    maelistnoise.append(maenoise)
-    rmselistnoise.append(rmsenoise)
 
-    Xtrain, Xtest = ceemdan(Xtrain, Xtest)
-    celllist = []
-    for col in range(len(Xtrain[0])):
-        column_data = Xtrain[:, col]
-        celllist.append(calculate(column_data, y_train))
-    print(celllist)
-    Xtrain__,Xtest__,index=getRFfeatures(Xtrain,y_train,Xtest)#随机森林
-    # Xtrain = np.delete(Xtrain, index, axis=1)
-    # Xtest = np.delete(Xtest, index, axis=1)
-    # Xtrain, Xtest = getReliefFfeatures(Xtrain, y_train, Xtest)#reliefF算法
-    Xtrain, Xtest = getRFE_RFfeatures(Xtrain, y_train, Xtest)#特征递归消除和随机森林结合
-    Xtrain = np.hstack((Xtrain__, Xtrain))
-    Xtest = np.hstack((Xtest__, Xtest))
-    # print("到这里是模态分解完毕,使用随机森林进行特征选择,得到的结果作为最终结果")
-    maenoiseemd, rmsenoiseemd = get_result(Xtrain , y_train, Xtest, y_test)
-    maelist.append(mae)
-    rmselist.append(rmse)
-    maelistnoiseemd.append(maenoiseemd)
-    rmselistnoiseemd.append(rmsenoiseemd)
-    print(std,maenoiseemd,rmsenoiseemd)
+noisemaelistnoise=[]
+noisermselistnoise = []
+noisemaelistnoiseemd=[]
+noisermselistnoiseemd = []
 
-print(maelistnoiseemd,rmselistnoiseemd)
-print('原始mae——{},rmse——{}'.format(np.median(maelist), np.median(rmselist)))
-print('加噪声mae——{},rmse——{}'.format(np.median(maelistnoise), np.median(rmselistnoise)))
-print('加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd), np.median(rmselistnoiseemd)))
+train_array = np.arange(0.02, 0.09, 0.01)
+for std in train_array:
+    for i in range(10):
+        random.seed(i)
+        Xtrain = X_train
+        Xtest = X_test
+        mae, rmse = get_result(Xtrain, y_train, Xtest, y_test)
 
+        Xtrain = add_noise(Xtrain, std)#加噪声
+        maenoise, rmsenoise = get_result(Xtrain, y_train, Xtest, y_test)
+        maelistnoise.append(maenoise)
+        rmselistnoise.append(rmsenoise)
+
+        Xtrain, Xtest = ceemdan(Xtrain, Xtest)
+        celllist = []
+        for col in range(len(Xtrain[0])):
+            column_data = Xtrain[:, col]
+            celllist.append(calculate(column_data, y_train))
+        print(celllist)
+        Xtrain__, Xtest__, index = getRFfeatures(Xtrain, y_train, Xtest)  # 随机森林
+        # Xtrain = np.delete(Xtrain, index, axis=1)
+        # Xtest = np.delete(Xtest, index, axis=1)
+        # Xtrain, Xtest = getReliefFfeatures(Xtrain, y_train, Xtest)#reliefF算法
+        Xtrain, Xtest = getRFE_RFfeatures(Xtrain, y_train, Xtest)  # 特征递归消除和随机森林结合
+        Xtrain = np.hstack((Xtrain__, Xtrain))
+        Xtest = np.hstack((Xtest__, Xtest))
+        # print("到这里是模态分解完毕,使用随机森林进行特征选择,得到的结果作为最终结果")
+        maenoiseemd, rmsenoiseemd = get_result(Xtrain, y_train, Xtest, y_test)
+        maelist.append(mae)
+        rmselist.append(rmse)
+        maelistnoiseemd.append(maenoiseemd)
+        rmselistnoiseemd.append(rmsenoiseemd)
+        print(std, maenoiseemd, rmsenoiseemd)
+    noisemaelistnoise.append(np.median(maelistnoise))
+    noisermselistnoise.append(np.median(rmselistnoise))
+    noisemaelistnoiseemd.append(np.median(maelistnoiseemd))
+    noisermselistnoiseemd.append(np.median(rmselistnoiseemd))
+
+
+print(noisemaelistnoiseemd,noisermselistnoiseemd)
+# print('原始mae——{},rmse——{}'.format(np.median(maelist), np.median(rmselist)))
+# print('加噪声mae——{},rmse——{}'.format(np.median(maelistnoise), np.median(rmselistnoise)))
+# print('加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd), np.median(rmselistnoiseemd)))
+
+plt.plot(train_array, noisermselistnoiseemd, label='CEEMDAN_XGB')
+plt.plot(train_array, noisermselistnoise, label='XGB')
+
+# 添加标题和标签
+plt.title('RMSE')
+plt.xlabel('noise_level')
+plt.ylabel('RMSE')
+# 添加图例
+plt.legend()
+
+# 显示图形
+plt.show()
 # 未打乱噪声随机（0.1-1）100
 # 原始mae——0.06506055792111122,rmse——0.08479516256745924
 # 加噪声mae——0.18514188773617876,rmse——0.22399060460510695
