@@ -145,7 +145,7 @@ s = 50  # 分割数据的次数（对数据进行随机排序的次数）
 m = 20   # 对于每次分割得到的训练集，生成m次噪声
 w = 3  # 5轮噪声比例
 times_list = [[1, 0.1, 0.02], [0.98, 0.1, 0.06], [0.96, 0.18, 0.05]]
-
+n_list=np.arange(10, 21, 1)
 # times_list = [[0.98, 0.1, 0.06]]
 
 
@@ -169,7 +169,7 @@ for x in range(w):
     tls_em_rmse = []
     ls_em_rmse = []
 
-    for j in range(n):  # 调整噪声大小
+    for j in n_list:  # 调整噪声大小
         np.random.seed(j)
         times = copy.deepcopy(times_list[x])
 
@@ -285,14 +285,14 @@ for x in range(w):
     # x = np.linspace(0, 5, 20)
 
     plt.figure(figsize=(7, 5))
-    x_plt=np.arange(0, 1, 0.05)
+    x_plt=np.arange(0.5, 1.05, 0.05)
     plt.plot(x_plt,med_ls_em_rmse,)
     plt.plot(x_plt,med_ls_rmse)
     plt.legend(['LS_EM', 'LS'])  #
     plt.xlabel('Noise')
     plt.ylabel('RMSE')
     plt.xticks(x_plt)
-    plt.locator_params(axis='x', nbins=10)  # 在横坐标上显示6个刻度
+    plt.locator_params(axis='x', nbins=20)  # 在横坐标上显示6个刻度
     plt.title("data split:{},noise generation:{}".format(s, m))
     plt.show()
 

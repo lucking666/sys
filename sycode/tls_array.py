@@ -153,7 +153,7 @@ w = 3  # 5轮噪声比例
 times_list = [[1, 0.1, 0.02], [0.98, 0.1, 0.06], [0.96, 0.18, 0.05]]
 
 # times_list = [[0.98, 0.1, 0.06]]
-
+n_list=np.arange(10, 21, 1)
 for x in range(w):
 
     # times = [random.uniform(0, 1) for _ in range(3)]
@@ -172,7 +172,7 @@ for x in range(w):
     tls_em_rmse = []
     ls_em_rmse = []
 
-    for j in range(n):  # 调整噪声大小
+    for j in n_list:  # 调整噪声大小
         np.random.seed(j)
         times = copy.deepcopy(times_list[x])
 
@@ -286,14 +286,14 @@ for x in range(w):
     # plt.xlim(0,5)
     # x = np.linspace(0, 5, 20)
     plt.figure(figsize=(7, 5))
-    x_plt = np.arange(0, 1, 0.05)
+    x_plt = np.arange(0.5, 1.05, 0.05)
     plt.plot(x_plt, med_tls_em_rmse, )
     plt.plot(x_plt, med_tls_rmse)
     plt.legend(['TLS_EM', 'TLS'])  #
     plt.xlabel('Noise')
     plt.ylabel('RMSE')
     plt.xticks(x_plt)
-    plt.locator_params(axis='x', nbins=10)  # 在横坐标上显示6个刻度
+    plt.locator_params(axis='x', nbins=20)  # 在横坐标上显示6个刻度
     plt.title("data split:{},noise generation:{}".format(s, m))
     plt.show()
 
