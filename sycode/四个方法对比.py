@@ -143,9 +143,9 @@ data['xita'] = _xita
 data_x = copy.deepcopy(data.values)
 
 N_train = []
-N_train.append(round(41 * 0.9))  # 训练集比例
-N_train.append(round(43 * 0.9))
-N_train.append(round(40 * 0.9))
+N_train.append(round(41 * 0.95))  # 训练集比例
+N_train.append(round(43 * 0.95))
+N_train.append(round(40 * 0.95))
 
 # n = 20  # 最大噪声水平：times=19*0.05，noise_Y = times * standard_Y * np.random.randn(Y_train.shape[0], 1)
 # s = 100 # 分割数据的次数（对数据进行随机排序的次数）
