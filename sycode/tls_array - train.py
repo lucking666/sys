@@ -35,7 +35,7 @@ def get_std(a):  # 求一列数据的标准差
     return _std
 
 
-items=['F2','F3','F5','F6','F9']
+items=['F2','F3','F5']
 
 #tls和em算法结合
 def add_em(X, Y,flag,x_test,Y_test,W0, b0,N_train):
@@ -61,7 +61,7 @@ def add_em(X, Y,flag,x_test,Y_test,W0, b0,N_train):
         # print(i)
         xita=[]
         X_dataframe = copy.deepcopy(X)
-        Y_predict=np.dot(X[..., 0:5], W) + b
+        Y_predict=np.dot(X[..., 0:3], W) + b
         xita=Y-Y_predict
 
         _std = []  # 计算三个电池批次的标准差
@@ -79,14 +79,14 @@ def add_em(X, Y,flag,x_test,Y_test,W0, b0,N_train):
             lamuda[c] = lamuda[c] / (np.sum(lamuda)*2)
 
         #对数据集加权
-        X_dataframe[:N_train[0], 0:6]=X_dataframe[:N_train[0], 0:6]* lamuda[0]
-        X_dataframe[N_train[0]:N_train[1]+N_train[0], 0:6] = X_dataframe[N_train[0]:N_train[1]+N_train[0], 0:6]*lamuda[1]
-        X_dataframe[N_train[1]+N_train[0]:N_train[1]+N_train[0]+N_train[2], 0:6] = X_dataframe[N_train[1]+N_train[0]:N_train[1]+N_train[0]+N_train[2], 0:6] * lamuda[2]
+        X_dataframe[:N_train[0], 0:4]=X_dataframe[:N_train[0], 0:4]* lamuda[0]
+        X_dataframe[N_train[0]:N_train[1]+N_train[0], 0:4] = X_dataframe[N_train[0]:N_train[1]+N_train[0], 0:4]*lamuda[1]
+        X_dataframe[N_train[1]+N_train[0]:N_train[1]+N_train[0]+N_train[2], 0:4] = X_dataframe[N_train[1]+N_train[0]:N_train[1]+N_train[0]+N_train[2], 0:4] * lamuda[2]
 
         #加权数据几求模型系数
         x_temp=np.random.permutation(X_dataframe)
-        X_ = x_temp[:,0:5]
-        Y_ = x_temp[:,5].reshape(-1,1)
+        X_ = x_temp[:,0:3]
+        Y_ = x_temp[:,3].reshape(-1,1)
         if flag=='tls':
             W_em, b_em = tls(X_, Y_)
         if flag=='ls':
@@ -96,8 +96,8 @@ def add_em(X, Y,flag,x_test,Y_test,W0, b0,N_train):
         W, b = W_em, b_em
 
         #先查看迭代过程中的rmse
-        mmm=rmse(Y, np.dot(X[:, 0:5], W) + b)
-        rmse_train.append(rmse(Y, np.dot(X[:, 0:5], W) + b))
+        mmm=rmse(Y, np.dot(X[:, 0:3], W) + b)
+        rmse_train.append(rmse(Y, np.dot(X[:, 0:3], W) + b))
         rmse_test.append(rmse(Y_test, np.dot(X_test, W) + b))
         # xxx=rmse(Y_test, y_pred_tls_em)
         # print("rmse is :",s)
@@ -117,7 +117,7 @@ def add_em(X, Y,flag,x_test,Y_test,W0, b0,N_train):
 
 # 加载数据
 data_all = pd.read_csv('dataset.csv')
-data = data_all[['F2', 'F3', 'F5', 'F6', 'F9','cyclelife']]  # 注意特征与feature_remain保持一致!!!
+data = data_all[['F2', 'F3', 'F5','cyclelife']]  # 注意特征与feature_remain保持一致!!!
 _class = [0] * 41 + [1] * 43 + [2] * 40
 data['class']=_class
 _xita=[0]*124
@@ -170,8 +170,8 @@ for rise in train_array:  # 调整噪声大小
     for x in range(w):
         # print("不同噪声比例：")
         times_list = [[1, 0.1, 0.02], [1, 0.09, 0.1],[1, 0.18, 0.09], [0.9,0.1 , 0.45],[0.8, 0.1, 0.05], [0.93, 0.06, 0.1]]
-        times = [1, 0.8, 0.06]
-        times = [0, 0, 0]
+        times = [1, 0.06, 0.002]
+        # times = [0, 0, 0]
 
         # times = [random.uniform(0, 1) for _ in range(3)]
         # times[times.index(min(times))] = times[times.index(min(times))] * 0.05
@@ -212,10 +212,10 @@ for rise in train_array:  # 调整噪声大小
             # print('data_train_random:',data_train_random)
 
 
-            data_train_random[...,5] = np.log10(data_train_random[...,5])  # dataframe
-            X_test_random[...,5] = np.log10(X_test_random[...,5])  # dataframe
+            data_train_random[...,3] = np.log10(data_train_random[...,3])  # dataframe
+            X_test_random[...,3] = np.log10(X_test_random[...,3])  # dataframe
             X_test_random=np.random.permutation(X_test_random)
-            Y_test_random = X_test_random[...,5].reshape(-1, 1)
+            Y_test_random = X_test_random[...,3].reshape(-1, 1)
 
 
             for k in range(m):  # 生成m次噪声
@@ -224,14 +224,14 @@ for rise in train_array:  # 调整噪声大小
 
                 X_train = copy.deepcopy(data_train_random)
                 # Y_train = copy.deepcopy(data_train_random.iloc)
-                X_test_random = X_test_random[..., 0:5]
+                X_test_random = X_test_random[..., 0:3]
                 X_test = copy.deepcopy(X_test_random)  # dataframe
                 Y_test = copy.deepcopy(Y_test_random)
                 standard_X = np.std(X_train, axis=0)  # .reshape(-1, 1)
                 np.random.seed(k)
-                noise_X0 = np.random.normal(loc=0, scale=times[0], size=(N_train[0], 6))
-                noise_X1 = np.random.normal(loc=0, scale=times[1], size=(N_train[1], 6))
-                noise_X2 = np.random.normal(loc=0, scale=times[2], size=(N_train[2], 6))
+                noise_X0 = np.random.normal(loc=0, scale=times[0], size=(N_train[0], 4))
+                noise_X1 = np.random.normal(loc=0, scale=times[1], size=(N_train[1], 4))
+                noise_X2 = np.random.normal(loc=0, scale=times[2], size=(N_train[2], 4))
 
                 noise_X = np.concatenate((np.concatenate((noise_X0, noise_X1), axis=0), noise_X2), axis=0)
                 # print('noise_X is :',noise_X[0])
@@ -239,23 +239,23 @@ for rise in train_array:  # 调整噪声大小
 
 
                 X_train_noise = copy.deepcopy(X_train)
-                Y_train=X_train_noise[...,5].reshape(-1,1)
+                Y_train=X_train_noise[...,3].reshape(-1,1)
 
 
                 for index in range(len(X_train_noise)):
-                    flag = int(X_train_noise[index][6])
-                    for i in range(6):
+                    flag = int(X_train_noise[index][4])
+                    for i in range(4):
                         noise_X[:, i] *= (standard_X[i])  # 根据每个特征的标准差生成噪声
                         X_train_noise[:, i] += noise_X[:, i]
 
                 # 转换数据类型（前面使用DataFrame是因为之前要进行特征选择）
                 x_train = X_train_noise
-                Y_train_noise = np.array(X_train_noise[:, 5]).reshape(-1, 1)
+                Y_train_noise = np.array(X_train_noise[:, 3]).reshape(-1, 1)
                 x_test = X_test
 
 
                 # 总体最小二乘
-                W_tls, b_tls, = tls(x_train[:,0:5], Y_train_noise)#x:array,y:array,(-1,1)
+                W_tls, b_tls, = tls(x_train[:,0:3], Y_train_noise)#x:array,y:array,(-1,1)
                 W_tls_em,b_tls_em=add_em(x_train, Y_train_noise,'tls',x_test,Y_test,W_tls, b_tls,N_train)#x:array,y:array,(-1,1)
                 y_pred_tls = np.dot(x_test, W_tls) + b_tls
                 y_pred_tls_em = np.dot(x_test, W_tls_em) + b_tls_em

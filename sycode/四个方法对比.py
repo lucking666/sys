@@ -83,7 +83,7 @@ def add_em(X, Y, flag, x_test, Y_test, W0, b0):
                 lamuda[c] = lamuda[c] / (np.sum(lamuda))
         elif flag=='ls':
             for c in range(len(lamuda)):
-                lamuda[c] = lamuda[c] / (np.sum(lamuda) * 0.35)
+                lamuda[c] = lamuda[c] / (np.sum(lamuda) * 2)
 
         # 对数据集加权
         X_dataframe[:N_train[0], 0:6] = X_dataframe[:N_train[0], 0:6] * lamuda[0]
@@ -143,9 +143,9 @@ data['xita'] = _xita
 data_x = copy.deepcopy(data.values)
 
 N_train = []
-N_train.append(round(41 * 0.95))  # 训练集比例
-N_train.append(round(43 * 0.95))
-N_train.append(round(40 * 0.95))
+N_train.append(round(41 * 0.9))  # 训练集比例
+N_train.append(round(43 * 0.9))
+N_train.append(round(40 * 0.9))
 
 # n = 20  # 最大噪声水平：times=19*0.05，noise_Y = times * standard_Y * np.random.randn(Y_train.shape[0], 1)
 # s = 100 # 分割数据的次数（对数据进行随机排序的次数）
@@ -154,7 +154,9 @@ n = 20  # 最大噪声水平：times=19*0.05，noise_Y = times * standard_Y * np
 s = 50  # 分割数据的次数（对数据进行随机排序的次数）
 m = 20  # 对于每次分割得到的训练集，生成m次噪声
 w = 3  # 5轮噪声比例
-times_list = [[1, 0.1, 0.02], [0.98, 0.1, 0.06], [0.96, 0.18, 0.05]]
+# times_list = [[1, 0.1, 0.02], [0.98, 0.1, 0.06], [0.96, 0.18, 0.05],[0.97, 0.07, 0.06],[0.95, 0.2, 0.03]]
+times_list = [[0.97, 0.07, 0.06],[0.95, 0.2, 0.03]]
+
 
 # times_list = [[0.98, 0.1, 0.06]]
 n_list=np.arange(10, 21, 1)

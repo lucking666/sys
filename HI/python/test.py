@@ -528,7 +528,26 @@ import SDA
 #
 # # 打印去噪后的数据
 # print("Denoised Data:", denoised_data)
+#
+# arr=[0.2,-0.4,-0.8,0.8,0.9,0.4]
+# selected_feature_indices = np.array(np.where(np.abs(arr)>0.5)).ravel()
+# print(selected_feature_indices)
+import pandas as pd
 
-arr=[0.2,-0.4,-0.8,0.8,0.9,0.4]
-selected_feature_indices = np.array(np.where(np.abs(arr)>0.5)).ravel()
-print(selected_feature_indices)
+# 假设 df 是你的 DataFrame
+# 用你的实际 DataFrame 替换这部分
+
+# 示例 DataFrame
+data = {
+    'id_cycle': [1, 1, 2, 2, 3, 3],
+    'value1': [10, 20, 30, 40, 50, 60],
+    'value2': [15, 25, 35, 45, 55, 65]
+}
+
+df = pd.DataFrame(data)
+
+# 计算每个 id_cycle 的均值
+df_mean = df.groupby('id_cycle').mean().reset_index()
+
+# 显示结果
+print(df_mean)
