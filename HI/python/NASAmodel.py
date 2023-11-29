@@ -335,7 +335,7 @@ noisermselistnoise = []
 noisemaelistnoiseemd=[]
 noisermselistnoiseemd = []
 
-train_array = np.arange(0, 1, 0.1)
+train_array = np.arange(0, 1, 0.1) 
 for std in train_array:
     for i in range(1):
         random.seed(i)
@@ -343,7 +343,7 @@ for std in train_array:
         Xtest = X_test
         # mae, rmse = get_result(Xtrain, y_train, Xtest, y_test)
 
-        # Xtrain = add_noise(Xtrain, std)#加噪声
+        Xtrain = add_noise(Xtrain, std)#加噪声
         maenoise, rmsenoise = get_result(Xtrain, y_train, Xtest, y_test)
         maelistnoise.append(maenoise)
         rmselistnoise.append(rmsenoise)
