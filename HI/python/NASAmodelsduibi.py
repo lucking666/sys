@@ -19,6 +19,13 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import RFECV,RFE
 import copy
+from sklearn.linear_model import LinearRegression
+from sklearn.svm import SVR
+from sklearn.linear_model import Perceptron
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+from xgboost import XGBRegressor
 
 rowdata = pd.read_csv('5_BatteryDataSet/BatteryAgingARC-FY08Q4/B0005_discharge.csv')
 
@@ -183,24 +190,40 @@ def evaluation(y_test, y_predict):
     return mae, rmse
 
 
-def get_result(X_train, y_train, X_test, y_test):
+def get_result(X_train, y_train, X_test, y_test,modelname):
     # model1=svm.SVR(probability = True,kernel = 'rbf',c=0.1,max_iter=10)
     # model1.fit(X_train,y_train)
     # y_pred=model1.predict(X_test)
 
     # lr=LinearRegression().fit(X_train,y_train)
     # y_pred=lr.predict(X_test)
+    if modelname=='XGB':# 创建OptimizedXGBRegressor对象
+        xgb_model = OptimizedXGBRegressor()
+        # 拟合数据
+        xgb_model.fit(X_train, y_train)
+        # 预测
+        y_pred = xgb_model.predict(X_test)
+        mae, rmse = evaluation(y_test, y_pred)
+    if modelname == 'LinearRegression':
+        model = LinearRegression()
+        model.fit(X_train, y_train)
+        y_pred=model.predict(X_test)
+        mae, rmse = evaluation(y_test, y_pred)
 
-    # 创建OptimizedXGBRegressor对象
-    xgb_model = OptimizedXGBRegressor()
+    # Support Vector Machine (SVM)
+    elif modelname == 'SVM':
+        model = SVR()
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+        mae, rmse = evaluation(y_test, y_pred)
 
-    # 拟合数据
-    xgb_model.fit(X_train, y_train)
+    # Gaussian Process Regression
+    elif modelname == 'GaussianProcess':
+        model = GaussianProcessRegressor()
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+        mae, rmse = evaluation(y_test, y_pred)
 
-    # 预测
-    y_pred = xgb_model.predict(X_test)
-
-    mae, rmse = evaluation(y_test, y_pred)
     # print('mae——{},rmse——{}'.format(mae, rmse))
     return mae, rmse
 
@@ -334,18 +357,42 @@ noisemaelistnoise=[]
 noisermselistnoise = []
 noisemaelistnoiseemd=[]
 noisermselistnoiseemd = []
+maelistnoiseemd_LR=[]
+rmselistnoiseemd_LR=[]
+noisemaelistnoiseemd_LR=[]
+noisermselistnoiseemd_LR=[]
+maelistnoiseemd_SVM=[]
+rmselistnoiseemd_SVM=[]
+noisemaelistnoiseemd_SVM=[]
+noisermselistnoiseemd_SVM=[]
+maelistnoiseemd_GPR=[]
+rmselistnoiseemd_GPR=[]
+noisemaelistnoiseemd_GPR=[]
+noisermselistnoiseemd_GPR=[]
 
 train_array = np.arange(0, 1, 0.1)
 
-for i in range(10):
+for i in range(1):
     random.seed(i)
     Xtrain = X_train
     Xtest = X_test
     std=0.5
     Xtrain = add_noise(Xtrain, std)#加噪声
-    maenoise, rmsenoise = get_result(Xtrain, y_train, Xtest, y_test)
+    maenoise, rmsenoise = get_result(Xtrain, y_train, Xtest, y_test,'LinearRegression')
     maelistnoise.append(maenoise)
     rmselistnoise.append(rmsenoise)
+
+    # maenoiseemd_LR, rmsenoiseemd_LR = get_result(Xtrain, y_train, Xtest, y_test, 'LinearRegression')
+    # maelistnoiseemd_LR.append(maenoiseemd_LR)
+    # rmselistnoiseemd_LR.append(rmsenoiseemd_LR)
+    #
+    # maenoiseemd_SVM, rmsenoiseemd_SVM = get_result(Xtrain, y_train, Xtest, y_test, 'SVM')
+    # maelistnoiseemd_SVM.append(maenoiseemd_SVM)
+    # rmselistnoiseemd_SVM.append(rmsenoiseemd_SVM)
+    #
+    # maenoiseemd_GPR, rmsenoiseemd_GPR = get_result(Xtrain, y_train, Xtest, y_test, 'GaussianProcess')
+    # maelistnoiseemd_GPR.append(maenoiseemd_GPR)
+    # rmselistnoiseemd_GPR.append(rmsenoiseemd_GPR)
 
     Xtrain, Xtest = ceemdan(Xtrain, Xtest)
 
@@ -357,53 +404,31 @@ for i in range(10):
     Xtrain = np.hstack((Xtrain__, Xtrain))
     Xtest = np.hstack((Xtest__, Xtest))
     # print("到这里是模态分解完毕,使用随机森林进行特征选择,得到的结果作为最终结果")
-    maenoiseemd, rmsenoiseemd = get_result(Xtrain, y_train, Xtest, y_test)
+    maenoiseemd, rmsenoiseemd = get_result(Xtrain, y_train, Xtest, y_test,'XGB')
     maelistnoiseemd.append(maenoiseemd)
     rmselistnoiseemd.append(rmsenoiseemd)
+
+    maenoiseemd_LR, rmsenoiseemd_LR = get_result(Xtrain, y_train, Xtest, y_test,'LinearRegression')
+    maelistnoiseemd_LR.append(maenoiseemd_LR)
+    rmselistnoiseemd_LR.append(rmsenoiseemd_LR)
+
+    maenoiseemd_SVM, rmsenoiseemd_SVM = get_result(Xtrain, y_train, Xtest, y_test, 'SVM')
+    maelistnoiseemd_SVM.append(maenoiseemd_SVM)
+    rmselistnoiseemd_SVM.append(rmsenoiseemd_SVM)
+
+    maenoiseemd_GPR, rmsenoiseemd_GPR = get_result(Xtrain, y_train, Xtest, y_test, 'GaussianProcess')
+    maelistnoiseemd_GPR.append(maenoiseemd_GPR)
+    rmselistnoiseemd_GPR.append(rmsenoiseemd_GPR)
+
     print(std, maenoiseemd, rmsenoiseemd)
-noisemaelistnoise.append(np.median(maelistnoise))
-noisermselistnoise.append(np.median(rmselistnoise))
-noisemaelistnoiseemd.append(np.median(maelistnoiseemd))
-noisermselistnoiseemd.append(np.median(rmselistnoiseemd))
 
 
-print(noisemaelistnoiseemd,noisermselistnoiseemd)
-print('原始mae——{},rmse——{}'.format(np.median(maelist), np.median(rmselist)))
+# print(noisemaelistnoiseemd,noisermselistnoiseemd)
+# print('原始mae——{},rmse——{}'.format(np.median(maelist), np.median(rmselist)))
 print('加噪声mae——{},rmse——{}'.format(np.median(maelistnoise), np.median(rmselistnoise)))
-print('加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd), np.median(rmselistnoiseemd)))
-
-plt.plot(train_array, noisermselistnoiseemd, label='CEEMDAN_XGB')
-plt.plot(train_array, noisermselistnoise, label='XGB')
-
-# 添加标题和标签
-plt.title('RMSE')
-plt.xlabel('noise_level')
-plt.ylabel('RMSE')
-# 添加图例
-plt.legend()
-
-# 显示图形
-plt.show()
-# 未打乱噪声随机（0.1-1）100
-# 原始mae——0.06506055792111122,rmse——0.08479516256745924
-# 加噪声mae——0.18514188773617876,rmse——0.22399060460510695
-# 加噪声em加特征选择算法mae——0.061412514800979895,rmse——0.07928092007857264 reliefF
-# 加噪声em加特征选择算法mae——0.0271271013718943,rmse——0.04098108520942392 RFE+RF
+print('XGB加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd), np.median(rmselistnoiseemd)))
+print('LR加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd_LR), np.median(rmselistnoiseemd_LR)))
+print('SVM加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd_SVM), np.median(rmselistnoiseemd_SVM)))
+print('GPR加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd_GPR), np.median(rmselistnoiseemd_GPR)))
 
 
-
-
-
-
-# 原始mae——0.06506055792111122,rmse——0.08479516256745924
-# 加噪声mae——0.18122681110996794,rmse——0.21347582073615085
-# 加噪声em加特征选择算法mae——0.03186961058367377,rmse——0.04566757598901475
-
-# 选择分量之间不作差
-# 原始mae——0.06506055792111122,rmse——0.08479516256745924
-# 加噪声mae——0.18763482697384215,rmse——0.2571905608044288
-# 加噪声加特征选择算法mae——0.029312993367365685,rmse——0.044428359339593965
-
-# 无噪声特征选择
-# 原始mae——0.06506055792111122,rmse——0.08479516256745924
-# 加特征选择算法mae——0.05479306457461163,rmse——0.06748110571603615

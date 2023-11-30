@@ -173,6 +173,7 @@ for x in range(w):
     ls_em_rmse = []
 
     for j in n_list:  # 调整噪声大小
+        j=19
         np.random.seed(j)
         times = copy.deepcopy(times_list[x])
 

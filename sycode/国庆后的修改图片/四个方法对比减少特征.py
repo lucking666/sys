@@ -150,7 +150,7 @@ N_train.append(round(40 * 0.9))
 # n = 20  # 最大噪声水平：times=19*0.05，noise_Y = times * standard_Y * np.random.randn(Y_train.shape[0], 1)
 # s = 100 # 分割数据的次数（对数据进行随机排序的次数）
 # m = 50  # 对于每次分割得到的训练集，生成m次噪声
-n = 20  # 最大噪声水平：times=19*0.05，noise_Y = times * standard_Y * np.random.randn(Y_train.shape[0], 1)
+n = 41  # 最大噪声水平：times=19*0.05，noise_Y = times * standard_Y * np.random.randn(Y_train.shape[0], 1)
 s = 50  # 分割数据的次数（对数据进行随机排序的次数）
 m = 20 # 对于每次分割得到的训练集，生成m次噪声
 w = 4  # 5轮噪声比例
@@ -160,7 +160,8 @@ times_list = [[1, 0.1, 0.02],[0.97, 0.07, 0.05],[0.99, 0.04, 0.03],[1,0.06,0.08]
 #
 
 # times_list = [[0.98, 0.1, 0.06]]
-n_list=np.arange(0,  10, 1)
+n_list=np.arange(8, 21, 1)
+# n_list=[5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 # n_list=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 for x in range(w):
 
@@ -175,13 +176,15 @@ for x in range(w):
     med_ls_rmse = []
     med_tls_em_rmse = []
     med_ls_em_rmse = []
-    tls_rmse = []
-    ls_rmse = []
-    tls_em_rmse = []
-    ls_em_rmse = []
 
     for j in n_list:  # 调整噪声大小
-
+        tls_rmse = []
+        ls_rmse = []
+        tls_em_rmse = []
+        ls_em_rmse = []
+        # j=int(j)
+        # j=20
+        # print(type(j))
         np.random.seed(j)
         times = copy.deepcopy(times_list[x])
 
@@ -280,7 +283,7 @@ for x in range(w):
         med_ls_rmse.append(np.median(ls_rmse))
         med_tls_em_rmse.append(np.median(tls_em_rmse))
         med_tls_rmse.append(np.median(tls_rmse))
-        print('jjjjj')
+        print('jjjjj',j)
 
     # 画图tls
     # plt.plot(med_tls_em_rmse)
@@ -295,10 +298,8 @@ for x in range(w):
     print('med_ls_em_rmse:', med_ls_em_rmse)
     print('med_ls_rmse:', med_ls_rmse)
     # 画图ls
-    # plt.xlim(0,5)
-    # x = np.linspace(0, 5, 20)
     plt.figure(figsize=(7, 5))
-    x_plt = np.arange(0.0, 0.52, 0.05)
+    x_plt = np.arange(0.4, 1.01, 0.05)
     # x_plt=[0.25,0.3]
     print(x_plt)
     plt.plot(x_plt, med_tls_em_rmse, )

@@ -396,17 +396,17 @@ def get_result(X_train, y_train, X_test, y_test):
     # model1.fit(X_train,y_train)
     # y_pred=model1.predict(X_test)
 
-    # lr=LinearRegression().fit(X_train,y_train)
-    # y_pred=lr.predict(X_test)
+    lr=LinearRegression().fit(X_train,y_train)
+    y_pred=lr.predict(X_test)
 
     # 创建OptimizedXGBRegressor对象
-    xgb_model = XGBRegressor()
-
-    # 拟合数据
-    xgb_model.fit(X_train, y_train)
-
-    # 预测
-    y_pred = xgb_model.predict(X_test)
+    # xgb_model = XGBRegressor()
+    #
+    # # 拟合数据
+    # xgb_model.fit(X_train, y_train)
+    #
+    # # 预测
+    # y_pred = xgb_model.predict(X_test)
 
     mae, rmse = evaluation(y_test, y_pred)
     # print('mae——{},rmse——{}'.format(mae, rmse))
@@ -629,9 +629,10 @@ noisermselistnoise = []
 noisemaelistnoiseemd=[]
 noisermselistnoiseemd = []
 
-train_array = np.arange(0.01, 1, 0.01)
+train_array = np.arange(0.01, 0.023, 0.01)
 for std in train_array:
-    for i in range(20):
+
+    for i in range(1):
         random.seed(i)
         Xtrain = X_train
         Xtest = X_test
@@ -669,9 +670,9 @@ for std in train_array:
 
 
 print(noisemaelistnoiseemd,noisermselistnoiseemd)
-# print('原始mae——{},rmse——{}'.format(np.median(maelist), np.median(rmselist)))
-# print('加噪声mae——{},rmse——{}'.format(np.median(maelistnoise), np.median(rmselistnoise)))
-# print('加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd), np.median(rmselistnoiseemd)))
+print('原始mae——{},rmse——{}'.format(np.median(maelist), np.median(rmselist)))
+print('加噪声mae——{},rmse——{}'.format(np.median(maelistnoise), np.median(rmselistnoise)))
+print('加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd), np.median(rmselistnoiseemd)))
 
 plt.plot(train_array, noisermselistnoiseemd, label='CEEMDAN_XGB')
 plt.plot(train_array, noisermselistnoise, label='XGB')
