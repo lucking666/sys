@@ -146,43 +146,44 @@ train_array = np.arange(0.15, 1.0, 0.1)
 n = 1    # 最大噪声水平：times=19*0.05，noise_Y = times * standard_Y * np.random.randn(Y_train.shape[0], 1)
 s = 200   # 分割数据的次数（对数据进行随机排序的次数）
 m = 100    # 对于每次分割得到的训练集，生成m次噪声
-w = 1  #5轮噪声比例
+w = 4  #5轮噪声比例
 
 
 
-med_tls_rmse = []
-med_ls_rmse = []
-med_tls_em_rmse = []
-med_ls_em_rmse = []
-for rise in train_array:  # 调整噪声大小
-    print("trian's size is :",rise)
 
-    N_train = []
-    N_train.append(round(41 * rise))  # 训练集比例
-    N_train.append(round(43 * rise))
-    N_train.append(round(40 * rise))
+times_list = [[1, 0.1, 0.02],[0.97, 0.07, 0.05],[0.99, 0.04, 0.03],[1,0.06,0.08]]
 
+for x in range(w):
+    # print("不同噪声比例：")
 
-    tls_rmse = []
-    ls_rmse = []
-    tls_em_rmse = []
-    ls_em_rmse = []
-    copy_data = data_x
+    times = copy.deepcopy(times_list[x])
+    # times = [random.uniform(0, 1) for _ in range(3)]
+    # times[times.index(min(times))] = times[times.index(min(times))] * 0.05
+    # times[times.index(max(times))] = times[times.index(max(times))] * 1
 
-    for x in range(w):
-        # print("不同噪声比例：")
-        times_list = [[1, 0.1, 0.02],[0.97, 0.07, 0.05],[0.99, 0.04, 0.03],[1,0.06,0.08]]
-        times = [1,0.06,0.08]
-        # times = [random.uniform(0, 1) for _ in range(3)]
-        # times[times.index(min(times))] = times[times.index(min(times))] * 0.05
-        # times[times.index(max(times))] = times[times.index(max(times))] * 1
+    # 随机打乱数组的顺序
+    # random.shuffle(times)
+    print(times)
+    times[0] = (times[0] * 1)
+    times[1] = (times[1] * 1)
+    times[2] = (times[2] * 1)
+    med_tls_rmse = []
+    med_ls_rmse = []
+    med_tls_em_rmse = []
+    med_ls_em_rmse = []
+    for rise in train_array:  # 调整噪声大小
+        print("trian's size is :", rise)
 
-        # 随机打乱数组的顺序
-        # random.shuffle(times)
-        print(times)
-        times[0] = (times[0] * 1)
-        times[1] = (times[1] * 1)
-        times[2] = (times[2] * 1)
+        N_train = []
+        N_train.append(round(41 * rise))  # 训练集比例
+        N_train.append(round(43 * rise))
+        N_train.append(round(40 * rise))
+
+        tls_rmse = []
+        ls_rmse = []
+        tls_em_rmse = []
+        ls_em_rmse = []
+        copy_data = data_x
 
         for p in range(s):  # 分割数据
             # print("不同训练集分割：",p)
@@ -274,46 +275,51 @@ for rise in train_array:  # 调整噪声大小
                 ls_em_rmse.append(rmse(Y_test, y_pred_ls_em))
             # print('med_ls_rmse:', ls_rmse)
             # print('med_ls_em_rmse:', ls_em_rmse)
-    # med_tls_rmse.append(np.median(tls_rmse))
-    med_ls_em_rmse.append(np.median(ls_em_rmse))
-    med_ls_rmse.append(np.median(ls_rmse))
-    med_tls_em_rmse.append(np.median(tls_em_rmse))
-    med_tls_rmse.append(np.median(tls_rmse))
+        # med_tls_rmse.append(np.median(tls_rmse))
+        med_ls_em_rmse.append(np.median(ls_em_rmse))
+        med_ls_rmse.append(np.median(ls_rmse))
+        med_tls_em_rmse.append(np.median(tls_em_rmse))
+        med_tls_rmse.append(np.median(tls_rmse))
 
 
-# 画图tls
-# plt.plot(med_tls_em_rmse)
-# plt.plot(med_tls_rmse)
-# plt.legend([ 'TLS_EM','TLS']) #
-# plt.xlabel('Noise Level')
-# plt.ylabel('RMSE')
-# plt.show()
+    # 画图tls
+    # plt.plot(med_tls_em_rmse)
+    # plt.plot(med_tls_rmse)
+    # plt.legend([ 'TLS_EM','TLS']) #
+    # plt.xlabel('Noise Level')
+    # plt.ylabel('RMSE')
+    # plt.show()
 
 
-print('med_tls_em_rmse:',med_tls_em_rmse)
-print('med_tls_rmse:',med_tls_rmse)
-print('med_ls_em_rmse:',med_ls_em_rmse)
-print('med_ls_rmse:',med_ls_rmse)
+    print('med_tls_em_rmse:',med_tls_em_rmse)
+    print('med_tls_rmse:',med_tls_rmse)
+    print('med_ls_em_rmse:',med_ls_em_rmse)
+    print('med_ls_rmse:',med_ls_rmse)
 
-# 画图ls
-# plt.xlim(0,5)
-# x = np.linspace(0, 5, 20)
-x_plt=train_array
-plt.plot(x_plt,med_tls_em_rmse,marker='o', linestyle='-')
-plt.plot(x_plt,med_tls_rmse,marker='o', linestyle='-')
-plt.plot(x_plt,med_ls_em_rmse,marker='o', linestyle='-')
-plt.plot(x_plt,med_ls_rmse,marker='o', linestyle='-')
-plt.legend(['TLS_EM', 'TLS','LS_EM', 'LS']) #
-plt.xticks(x_plt)
-plt.xlabel('train_size')
-plt.ylabel('RMSE')
-plt.show()
+    # 画图ls
+    # plt.xlim(0,5)
+    # x = np.linspace(0, 5, 20)
+    # x_plt=train_array
+    # plt.plot(x_plt,med_tls_em_rmse,marker='o', linestyle='-')
+    # plt.plot(x_plt,med_tls_rmse,marker='o', linestyle='-')
+    # plt.plot(x_plt,med_ls_em_rmse,marker='o', linestyle='-')
+    # plt.plot(x_plt,med_ls_rmse,marker='o', linestyle='-')
+    # plt.legend(['TLS_EM', 'TLS','LS_EM', 'LS']) #
+    # plt.xticks(x_plt)
+    # plt.xlabel('train_size')
+    # plt.ylabel('RMSE')
+    # plt.show()
+    # print("hgh")
+    txt_data = f"med_tls_em_rmse={med_tls_em_rmse}\nmed_tls_rmse={med_tls_rmse}\nmed_ls_em_rmse={med_ls_em_rmse}\nmed_ls_rmse={med_ls_rmse}"
+    # np.savetxt("ghdfs.txt",data)#
+    with open(str(x + 1) + "train_SIZEth.txt", 'w') as file:
+        file.write(txt_data)
 
-# 画图tls和ls
-# plt.plot(med_tls_rmse)
-# plt.plot(med_ls_rmse)
-# plt.legend(['TLS', 'LS'])  #
-# plt.xlabel('Noise level {}'.format(n*s*m))
-# plt.ylabel('RMSE')
-# plt.show()
+    # 画图tls和ls
+    # plt.plot(med_tls_rmse)
+    # plt.plot(med_ls_rmse)
+    # plt.legend(['TLS', 'LS'])  #
+    # plt.xlabel('Noise level {}'.format(n*s*m))
+    # plt.ylabel('RMSE')
+    # plt.show()
 

@@ -26,6 +26,7 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from xgboost import XGBRegressor
+from linear_regression_std import tls, ls
 
 rowdata = pd.read_csv('5_BatteryDataSet/BatteryAgingARC-FY08Q4/B0005_discharge.csv')
 
@@ -54,11 +55,12 @@ feature1_scale = normalization(feature1)
 # 对特征和数据进行取对数
 import math
 
-labellog = []
-for i in label:
-    labellog.append(math.log(i, 10))
-
-labellog = np.array(labellog).reshape(-1, 1)
+# labellog = []
+# for i in label:
+#     labellog.append(math.log(i, 10))
+#
+# labellog = np.array(labellog).reshape(-1, 1)
+labellog=label.reshape(-1,1)
 # labellog=np.array(label).reshape(-1, 1)
 feature1_scale = feature1_scale[:]
 # feature2_scale = feature2_scale[:]
@@ -81,7 +83,7 @@ feature1_scale = feature1_scale[:]
 # feature1log feature2log相关系数
 # -0.7842766999664926,-0.899444523235248
 
-N_train= int(len(feature1) * 0.9)
+N_train= int(len(feature1) * 0.8)
 X_train, X_test = feature1_scale[:N_train], feature1_scale[N_train:]
 y_train, y_test = labellog[:N_train], labellog[N_train:]
 
@@ -204,11 +206,16 @@ def get_result(X_train, y_train, X_test, y_test,modelname):
         # 预测
         y_pred = xgb_model.predict(X_test)
         mae, rmse = evaluation(y_test, y_pred)
-    if modelname == 'LinearRegression':
+    elif modelname == 'LinearRegression':
         model = LinearRegression()
         model.fit(X_train, y_train)
         y_pred=model.predict(X_test)
         mae, rmse = evaluation(y_test, y_pred)
+
+    elif modelname == 'TLS':
+        W_tls, b_tls, = tls(X_train, y_train)  # x:array,y:array,(-1,1)
+        y_pred_tls = np.dot(X_test, W_tls) + b_tls
+        mae, rmse = evaluation(y_test, y_pred_tls)
 
     # Support Vector Machine (SVM)
     elif modelname == 'SVM':
@@ -361,6 +368,10 @@ maelistnoiseemd_LR=[]
 rmselistnoiseemd_LR=[]
 noisemaelistnoiseemd_LR=[]
 noisermselistnoiseemd_LR=[]
+maelistnoiseemd_TLS=[]
+rmselistnoiseemd_TLS=[]
+noisemaelistnoiseemd_TLS=[]
+noisermselistnoiseemd_TLS=[]
 maelistnoiseemd_SVM=[]
 rmselistnoiseemd_SVM=[]
 noisemaelistnoiseemd_SVM=[]
@@ -372,13 +383,15 @@ noisermselistnoiseemd_GPR=[]
 
 train_array = np.arange(0, 1, 0.1)
 
-for i in range(1):
+for i in range(100):
     random.seed(i)
     Xtrain = X_train
     Xtest = X_test
-    std=0.5
-    Xtrain = add_noise(Xtrain, std)#加噪声
-    maenoise, rmsenoise = get_result(Xtrain, y_train, Xtest, y_test,'LinearRegression')
+    std_x=0.5
+    std_y=0.1
+    Xtrain = add_noise(Xtrain, std_x)#加噪声
+    # y_train=add_noise(y_train,std_y)
+    maenoise, rmsenoise = get_result(Xtrain, y_train, Xtest, y_test,'XGB')
     maelistnoise.append(maenoise)
     rmselistnoise.append(rmsenoise)
 
@@ -412,6 +425,10 @@ for i in range(1):
     maelistnoiseemd_LR.append(maenoiseemd_LR)
     rmselistnoiseemd_LR.append(rmsenoiseemd_LR)
 
+    maenoiseemd_TLS, rmsenoiseemd_TLS = get_result(Xtrain, y_train, Xtest, y_test, 'TLS')
+    maelistnoiseemd_TLS.append(maenoiseemd_TLS)
+    rmselistnoiseemd_TLS.append(rmsenoiseemd_TLS)
+
     maenoiseemd_SVM, rmsenoiseemd_SVM = get_result(Xtrain, y_train, Xtest, y_test, 'SVM')
     maelistnoiseemd_SVM.append(maenoiseemd_SVM)
     rmselistnoiseemd_SVM.append(rmsenoiseemd_SVM)
@@ -420,7 +437,7 @@ for i in range(1):
     maelistnoiseemd_GPR.append(maenoiseemd_GPR)
     rmselistnoiseemd_GPR.append(rmsenoiseemd_GPR)
 
-    print(std, maenoiseemd, rmsenoiseemd)
+    # print( maenoiseemd, rmsenoiseemd)
 
 
 # print(noisemaelistnoiseemd,noisermselistnoiseemd)
@@ -428,6 +445,7 @@ for i in range(1):
 print('加噪声mae——{},rmse——{}'.format(np.median(maelistnoise), np.median(rmselistnoise)))
 print('XGB加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd), np.median(rmselistnoiseemd)))
 print('LR加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd_LR), np.median(rmselistnoiseemd_LR)))
+print('TLS加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd_TLS), np.median(rmselistnoiseemd_TLS)))
 print('SVM加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd_SVM), np.median(rmselistnoiseemd_SVM)))
 print('GPR加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd_GPR), np.median(rmselistnoiseemd_GPR)))
 
