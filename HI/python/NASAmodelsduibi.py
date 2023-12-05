@@ -29,6 +29,7 @@ from xgboost import XGBRegressor
 from linear_regression_std import tls, ls
 import tensorflow as tf
 from tensorflow.keras import layers, models
+from sklearn.cross_decomposition import PLSRegression
 
 
 rowdata = pd.read_csv('5_BatteryDataSet/BatteryAgingARC-FY08Q4/B0005_discharge.csv')
@@ -236,6 +237,12 @@ def get_result(X_train, y_train, X_test, y_test,modelname):
         y_pred_tls = np.dot(X_test, W_tls) + b_tls
         mae, rmse = evaluation(y_test, y_pred_tls)
 
+    elif modelname == 'PLS':
+        pls = PLSRegression(n_components=1)
+        pls.fit(X_train, y_train)
+        y_pred = pls.predict(X_test)
+        mae, rmse = evaluation(y_test, y_pred)
+
     # Support Vector Machine (SVM)
     elif modelname == 'SVM':
         model = SVR()
@@ -403,6 +410,10 @@ maelistnoiseemd_TLS=[]
 rmselistnoiseemd_TLS=[]
 noisemaelistnoiseemd_TLS=[]
 noisermselistnoiseemd_TLS=[]
+maelistnoiseemd_PLS=[]
+rmselistnoiseemd_PLS=[]
+noisemaelistnoiseemd_PLS=[]
+noisermselistnoiseemd_PLS=[]
 maelistnoiseemd_SVM=[]
 rmselistnoiseemd_SVM=[]
 noisemaelistnoiseemd_SVM=[]
@@ -418,7 +429,7 @@ noisermselistnoiseemd_CNN=[]
 
 train_array = np.arange(0, 1, 0.1)
 
-for i in range(10):
+for i in range(100):
     random.seed(i)
     Xtrain = X_train
     Xtest = X_test
@@ -466,6 +477,10 @@ for i in range(10):
     maelistnoiseemd_TLS.append(maenoiseemd_TLS)
     rmselistnoiseemd_TLS.append(rmsenoiseemd_TLS)
 
+    maenoiseemd_PLS, rmsenoiseemd_PLS = get_result(Xtrain, y_train, Xtest, y_test, 'PLS')
+    maelistnoiseemd_PLS.append(maenoiseemd_PLS)
+    rmselistnoiseemd_PLS.append(rmsenoiseemd_PLS)
+
     maenoiseemd_CNN, rmsenoiseemd_CNN = get_result(Xtrain, y_train, Xtest, y_test, 'CNN')
     maelistnoiseemd_CNN.append(maenoiseemd_CNN)
     rmselistnoiseemd_CNN.append(rmsenoiseemd_CNN)
@@ -487,8 +502,17 @@ print('加噪声mae——{},rmse——{}'.format(np.median(maelistnoise), np.med
 print('XGB加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd), np.median(rmselistnoiseemd)))
 print('LR加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd_LR), np.median(rmselistnoiseemd_LR)))
 print('TLS加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd_TLS), np.median(rmselistnoiseemd_TLS)))
+print('PLS加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd_PLS), np.median(rmselistnoiseemd_PLS)))
 print('CNN加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd_CNN), np.median(rmselistnoiseemd_CNN)))
 print('SVM加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd_SVM), np.median(rmselistnoiseemd_SVM)))
 print('GPR加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd_GPR), np.median(rmselistnoiseemd_GPR)))
 
 
+# XGB加噪声加特征选择算法mae——0.060886915909605176,rmse——0.06482534585616785
+# LR加噪声加特征选择算法mae——0.055388616472889625,rmse——0.05728185797840193
+# TLS加噪声加特征选择算法mae——0.06884068735039625,rmse——0.07183218730598398
+# PLS加噪声加特征选择算法mae——0.050219588524978875,rmse——0.05257719989135986
+# CNN加噪声加特征选择算法mae——0.3629259255928776,rmse——0.3678131260054198
+# SVM加噪声加特征选择算法mae——0.1572922826941074,rmse——0.16051783272478862
+# GPR加噪声加特征选择算法mae——0.6344708054430969,rmse——0.7218649427239197
+# 有使用LSSVR算法在github上
