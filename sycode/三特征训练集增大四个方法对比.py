@@ -25,6 +25,7 @@ from itertools import permutations
 from linear_regression_std import tls, ls
 # from libs.stepwise import cv_stepwise
 
+
 def rmse(y_true, y_pred):
     return np.sqrt(sum(np.square(y_true - y_pred)) / len(y_true))
 
@@ -146,7 +147,7 @@ train_array = np.arange(0.15, 1.0, 0.1)
 n = 1    # 最大噪声水平：times=19*0.05，noise_Y = times * standard_Y * np.random.randn(Y_train.shape[0], 1)
 s = 200   # 分割数据的次数（对数据进行随机排序的次数）
 m = 100    # 对于每次分割得到的训练集，生成m次噪声
-w = 4  #5轮噪声比例
+w = 1  #5轮噪声比例
 
 
 
@@ -156,7 +157,7 @@ times_list = [[1, 0.1, 0.02],[0.97, 0.07, 0.05],[0.99, 0.04, 0.03],[1,0.06,0.08]
 for x in range(w):
     # print("不同噪声比例：")
 
-    times = copy.deepcopy(times_list[x])
+    times =[1, 0.1, 0.02]
     # times = [random.uniform(0, 1) for _ in range(3)]
     # times[times.index(min(times))] = times[times.index(min(times))] * 0.05
     # times[times.index(max(times))] = times[times.index(max(times))] * 1

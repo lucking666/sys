@@ -27,6 +27,9 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from xgboost import XGBRegressor
 from linear_regression_std import tls, ls
+import tensorflow as tf
+from tensorflow.keras import layers, models
+
 
 rowdata = pd.read_csv('5_BatteryDataSet/BatteryAgingARC-FY08Q4/B0005_discharge.csv')
 
@@ -192,6 +195,22 @@ def evaluation(y_test, y_predict):
     return mae, rmse
 
 
+
+
+def create_cnn_regression_model(input_shape):
+    model = models.Sequential()
+    model.add(layers.Conv1D(32, kernel_size=2, activation='relu', input_shape=input_shape))
+    model.add(layers.MaxPooling1D(pool_size=2, strides=2, padding='same'))
+    model.add(layers.Flatten())
+    model.add(layers.Dense(64, activation='relu'))
+    model.add(layers.Dense(1, activation='linear'))
+    model.compile(optimizer='adam', loss='mean_squared_error')
+    return model
+
+
+
+
+
 def get_result(X_train, y_train, X_test, y_test,modelname):
     # model1=svm.SVR(probability = True,kernel = 'rbf',c=0.1,max_iter=10)
     # model1.fit(X_train,y_train)
@@ -228,6 +247,18 @@ def get_result(X_train, y_train, X_test, y_test,modelname):
     elif modelname == 'GaussianProcess':
         model = GaussianProcessRegressor()
         model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+        mae, rmse = evaluation(y_test, y_pred)
+
+    elif modelname=="CNN":
+        X_train = X_train.reshape(X_train.shape[0], X_train.shape[1], 1)
+        X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], 1)
+
+        input_shape = (X_train.shape[1], 1)
+        model = create_cnn_regression_model(input_shape)
+        # 训练模型
+        model.fit(X_train, y_train, epochs=10, batch_size=32)
+        # 在测试集上进行预测
         y_pred = model.predict(X_test)
         mae, rmse = evaluation(y_test, y_pred)
 
@@ -380,15 +411,21 @@ maelistnoiseemd_GPR=[]
 rmselistnoiseemd_GPR=[]
 noisemaelistnoiseemd_GPR=[]
 noisermselistnoiseemd_GPR=[]
+maelistnoiseemd_CNN=[]
+rmselistnoiseemd_CNN=[]
+noisemaelistnoiseemd_CNN=[]
+noisermselistnoiseemd_CNN=[]
 
 train_array = np.arange(0, 1, 0.1)
 
-for i in range(100):
+for i in range(10):
     random.seed(i)
     Xtrain = X_train
     Xtest = X_test
-    std_x=0.5
-    std_y=0.1
+    # std_x=0.5
+    # std_y=0.1
+    std_x = np.std(X_train)
+    std_y = np.std(y_train)
     Xtrain = add_noise(Xtrain, std_x)#加噪声
     # y_train=add_noise(y_train,std_y)
     maenoise, rmsenoise = get_result(Xtrain, y_train, Xtest, y_test,'XGB')
@@ -429,6 +466,10 @@ for i in range(100):
     maelistnoiseemd_TLS.append(maenoiseemd_TLS)
     rmselistnoiseemd_TLS.append(rmsenoiseemd_TLS)
 
+    maenoiseemd_CNN, rmsenoiseemd_CNN = get_result(Xtrain, y_train, Xtest, y_test, 'CNN')
+    maelistnoiseemd_CNN.append(maenoiseemd_CNN)
+    rmselistnoiseemd_CNN.append(rmsenoiseemd_CNN)
+
     maenoiseemd_SVM, rmsenoiseemd_SVM = get_result(Xtrain, y_train, Xtest, y_test, 'SVM')
     maelistnoiseemd_SVM.append(maenoiseemd_SVM)
     rmselistnoiseemd_SVM.append(rmsenoiseemd_SVM)
@@ -446,6 +487,7 @@ print('加噪声mae——{},rmse——{}'.format(np.median(maelistnoise), np.med
 print('XGB加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd), np.median(rmselistnoiseemd)))
 print('LR加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd_LR), np.median(rmselistnoiseemd_LR)))
 print('TLS加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd_TLS), np.median(rmselistnoiseemd_TLS)))
+print('CNN加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd_CNN), np.median(rmselistnoiseemd_CNN)))
 print('SVM加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd_SVM), np.median(rmselistnoiseemd_SVM)))
 print('GPR加噪声加特征选择算法mae——{},rmse——{}'.format(np.median(maelistnoiseemd_GPR), np.median(rmselistnoiseemd_GPR)))
 
