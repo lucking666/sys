@@ -38,7 +38,7 @@ def get_std(a):  # 求一列数据的标准差
     return _std
 
 
-items = ['F2', 'F5', 'F9']
+items = ['F2', 'F5', 'F3']
 
 
 # tls和em算法结合
@@ -127,7 +127,7 @@ def add_em(X, Y, flag, x_test, Y_test, W0, b0):
 
 # 加载数据
 data_all = pd.read_csv('dataset.csv')
-data = data_all[['F2', 'F5', 'F9', 'cyclelife']]  # 注意特征与feature_remain保持一致!!!
+data = data_all[['F2', 'F5', 'F3', 'cyclelife']]  # 注意特征与feature_remain保持一致!!!
 _class = [0] * 41 + [1] * 43 + [2] * 40
 data['class'] = _class
 _xita = [0] * 124
@@ -151,8 +151,8 @@ N_train.append(round(40 * 0.9))
 # s = 100 # 分割数据的次数（对数据进行随机排序的次数）
 # m = 50  # 对于每次分割得到的训练集，生成m次噪声
 n = 41  # 最大噪声水平：times=19*0.05，noise_Y = times * standard_Y * np.random.randn(Y_train.shape[0], 1)
-s = 200  # 分割数据的次数（对数据进行随机排序的次数）
-m = 100 # 对于每次分割得到的训练集，生成m次噪声
+s = 50  # 分割数据的次数（对数据进行随机排序的次数）
+m = 20 # 对于每次分割得到的训练集，生成m次噪声
 w = 4  # 5轮噪声比例
 # times_list = [[1, 0.1, 0.02], [0.98, 0.1, 0.06], [0.96, 0.18, 0.05],[0.97, 0.07, 0.06],[0.95, 0.2, 0.03],[1, 0.07, 0.05],[0.99, 0.2, 0.03],[0.97, 0.04, 0.06] ]
 
@@ -160,9 +160,10 @@ times_list = [[1, 0.1, 0.02],[0.97, 0.07, 0.05],[0.99, 0.04, 0.03],[1,0.06,0.08]
 #
 
 # times_list = [[0.98, 0.1, 0.06]]
-n_list=np.arange(0, 21, 1)
+n_list=np.arange(8, 21, 1)
 # n_list=[5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 # n_list=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+fig, axs = plt.subplots(2, 2, figsize=(12, 10))
 for x in range(w):
 
     # times = [random.uniform(0, 1) for _ in range(3)]
@@ -187,7 +188,7 @@ for x in range(w):
         # print(type(j))
         np.random.seed(j)
         times = copy.deepcopy(times_list[x])
-        times=[1,0.06,0.08]
+        # times=[1,0.06,0.08]
 
         copy_data = data_x
 
@@ -299,27 +300,36 @@ for x in range(w):
     print('med_ls_em_rmse:', med_ls_em_rmse)
     print('med_ls_rmse:', med_ls_rmse)
 
-    # txt_data = f"med_tls_em_rmse={med_tls_em_rmse}\nmed_tls_rmse={med_tls_rmse}\nmed_ls_em_rmse={med_ls_em_rmse}\nmed_ls_rmse={med_ls_rmse}"
-    # # np.savetxt("ghdfs.txt",data)#
-    # with open(str(x+1)+"th.txt", 'w') as file:
-    #     file.write(txt_data)
+    txt_data = f"med_tls_em_rmse{x}={med_tls_em_rmse}\nmed_tls_rmse{x}={med_tls_rmse}\nmed_ls_em_rmse{x}={med_ls_em_rmse}\nmed_ls_rmse{x}={med_ls_rmse}"
+    # np.savetxt("ghdfs.txt",data)#
+    with open(str(x+1)+"th.txt", 'w') as file:
+        file.write(txt_data)
 
     # 画图ls
-    plt.figure(figsize=(7, 5))
-    x_plt = np.arange(0, 1.01, 0.05)
+    # plt.figure(figsize=(7, 5))
+    if x==0:
+        h=0
+        z=0
+    elif x==1:
+        h=0
+        z=1
+    elif x==2:
+        h=1
+        z=0
+    elif x==3:
+        h=1
+        z=1
+    x_plt = np.arange(0.4, 1.01, 0.05)
     # x_plt=[0.25,0.3]
-    print(x_plt)
-    plt.plot(x_plt, med_tls_em_rmse, )
-    plt.plot(x_plt, med_tls_rmse)
-    plt.plot(x_plt, med_ls_em_rmse, )
-    plt.plot(x_plt, med_ls_rmse)
-    plt.legend(['TLS_EM', 'TLS','LS_EM', 'LS'])  #
-    plt.xlabel('Noise')
-    plt.ylabel('RMSE')
-    plt.xticks(x_plt)
-    plt.locator_params(axis='x', nbins=10)  # 在横坐标上显示6个刻度
-    plt.title("data split:{},noise generation:{}".format(s, m))
-    plt.show()
+    axs[h, z].plot(x_plt, med_tls_em_rmse, label='TLS_EM')
+    axs[h, z].plot(x_plt, med_tls_rmse, label='TLS')
+    axs[h, z].plot(x_plt, med_ls_em_rmse, label='LS_EM')
+    axs[h, z].plot(x_plt, med_ls_rmse, label='LS')
+    axs[h, z].set_title(str([round(x, 2)  for x in times]))
+    axs[h, z].set_xlabel('Noise')
+    axs[h, z].set_ylabel('RMSE')
+    axs[h, z].set_xticks(x_plt)
+    axs[h, z].locator_params(axis='x', nbins=10)  # 在横
 
 # 画图tls和ls
 # plt.plot(med_tls_rmse)
@@ -328,4 +338,9 @@ for x in range(w):
 # plt.xlabel('Noise level {}'.format(n*s*m))
 # plt.ylabel('RMSE')
 # plt.show()
+# fig.suptitle('Comparison of RMSE for Four Methods')
+for ax in axs.flat:
+    ax.set(xlabel='Noise', ylabel='RMSE')
+    ax.legend()
+plt.show()
 
