@@ -110,11 +110,12 @@ axins.set_xticks([])
 axins.set_yticks([])
 
 # 添加标题和标签
-plt.subplots_adjust(wspace=0.5, hspace=0.5)
+plt.subplots_adjust(left=0.07, right=0.95, top=0.9, bottom=0.1, wspace=0.3, hspace=0.3)
+# plt.subplots_adjust(wspace=0.5, hspace=0.5)
 # 在整个图上添加 'a', 'b', 'c', 'd' 的标注
-fig.text(0.05, 0.9, 'a', fontsize=14, fontweight='bold')
+fig.text(0.01, 0.9, 'a', fontsize=14, fontweight='bold')
 fig.text(0.5, 0.9, 'b', fontsize=14, fontweight='bold')
-fig.text(0.05, 0.46, 'c', fontsize=14, fontweight='bold')
+fig.text(0.01, 0.46, 'c', fontsize=14, fontweight='bold')
 fig.text(0.5, 0.46, 'd', fontsize=14, fontweight='bold')
 
 # fig.suptitle('Comparison of RMSE for Four Methods')
