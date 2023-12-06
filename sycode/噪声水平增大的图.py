@@ -60,8 +60,8 @@ axs[0, 0].locator_params(axis='x', nbins=10)  # 在横坐标上显示6个刻度
 axins = inset_axes(axs[0, 0], width="20%", height="20%", loc='lower right',bbox_to_anchor=(0.01, 0.07, 1, 1),
                    bbox_transform=axs[0,0].transAxes)
 # 在放大区域中绘制数据
-axins.plot(np.arange(0,6,1), med_tls_em_rmse0[6:12],label='TLS_EM',linestyle='-',marker='^',color='blue' )
-axins.plot(np.arange(0,6,1), med_ls_em_rmse0[6:12],label='LS_EM',linestyle='-',marker='*',color='green' )
+axins.plot(np.arange(0,3,1), med_tls_em_rmse0[9:12],label='TLS_EM',linestyle='-',marker='^',color='blue' )
+axins.plot(np.arange(0,3,1), med_ls_em_rmse0[9:12],label='LS_EM',linestyle='-',marker='*',color='green' )
 # 不显示放大区域的坐标刻度
 axins.set_xticks([])
 axins.set_yticks([])
@@ -82,8 +82,8 @@ axs[0, 1].locator_params(axis='x', nbins=10)  # 在横坐标上显示6个刻度
 axins = inset_axes(axs[0, 1], width="20%", height="20%", loc='lower right',bbox_to_anchor=(0.01, 0.07, 1, 1),
                    bbox_transform=axs[0,1].transAxes)
 # 在放大区域中绘制数据
-axins.plot(np.arange(0,6,1), med_tls_em_rmse1[6:12],label='TLS_EM',linestyle='-',marker='^',color='blue' )
-axins.plot(np.arange(0,6,1), med_ls_em_rmse1[6:12],label='LS_EM',linestyle='-',marker='*',color='green' )
+axins.plot(np.arange(0,3,1), med_tls_em_rmse1[9:12],label='TLS_EM',linestyle='-',marker='^',color='blue' )
+axins.plot(np.arange(0,3,1), med_ls_em_rmse1[9:12],label='LS_EM',linestyle='-',marker='*',color='green' )
 # 不显示放大区域的坐标刻度
 axins.set_xticks([])
 axins.set_yticks([])
@@ -100,8 +100,8 @@ axs[1, 0].locator_params(axis='x', nbins=10)  # 在横坐标上显示6个刻度
 axins = inset_axes(axs[1, 0], width="20%", height="20%", loc='lower right',bbox_to_anchor=(0.01, 0.07, 1, 1),
                    bbox_transform=axs[1,0].transAxes)
 # 在放大区域中绘制数据
-axins.plot(np.arange(0,6,1), med_tls_em_rmse2[6:12],label='TLS_EM',linestyle='-',marker='^',color='blue' )
-axins.plot(np.arange(0,6,1), med_ls_em_rmse2[6:12],label='LS_EM',linestyle='-',marker='*',color='green' )
+axins.plot(np.arange(0,3,1), med_tls_em_rmse2[9:12],label='TLS_EM',linestyle='-',marker='^',color='blue' )
+axins.plot(np.arange(0,3,1), med_ls_em_rmse2[9:12],label='LS_EM',linestyle='-',marker='*',color='green' )
 # 不显示放大区域的坐标刻度
 axins.set_xticks([])
 axins.set_yticks([])
@@ -119,8 +119,8 @@ axs[1, 1].locator_params(axis='x', nbins=10)  # 在横坐标上显示6个刻度
 axins = inset_axes(axs[1, 1], width="20%", height="20%", loc='lower right',bbox_to_anchor=(0.01, 0.07, 1, 1),
                    bbox_transform=axs[1,1].transAxes)
 # 在放大区域中绘制数据
-axins.plot(np.arange(0,6,1), med_tls_em_rmse3[6:12],label='TLS_EM',linestyle='-',marker='^',color='blue' )
-axins.plot(np.arange(0,6,1), med_ls_em_rmse3[6:12],label='LS_EM',linestyle='-',marker='*',color='green' )
+axins.plot(np.arange(0,3,1), med_tls_em_rmse3[9:12],label='TLS_EM',linestyle='-',marker='^',color='blue' )
+axins.plot(np.arange(0,3,1), med_ls_em_rmse3[9:12],label='LS_EM',linestyle='-',marker='*',color='green' )
 # 不显示放大区域的坐标刻度
 axins.set_xticks([])
 axins.set_yticks([])
@@ -135,7 +135,7 @@ fig.text(0.5, 0.46, 'd', fontsize=14, fontweight='bold')
 
 # fig.suptitle('Comparison of RMSE for Four Methods')
 for ax in axs.flat:
-    ax.set(xlabel='train_size', ylabel='RMSE')
+    ax.set(xlabel='noise level', ylabel='RMSE')
     ax.legend()
 
 plt.show()
