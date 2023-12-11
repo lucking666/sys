@@ -545,7 +545,7 @@ data = {
 }
 
 df = pd.DataFrame(data)
-
+print(len(df))
 # 计算每个 id_cycle 的均值
 df_mean = df.groupby('id_cycle').mean().reset_index()
 
