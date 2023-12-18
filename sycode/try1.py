@@ -187,7 +187,7 @@ for x in range(w):
         # print(type(j))
         np.random.seed(j)
         times = copy.deepcopy(times_list[x])
-        times=[1,0.06,0.08]
+        times=[0.97, 0.07, 0.05]
 
         copy_data = data_x
 
