@@ -1,0 +1,3 @@
+D:\creat\programming-homework\StudentMangementSystemEasyx\Debug\StudentMangementSystemEasyx.exe
+D:\creat\programming-homework\StudentMangementSystemEasyx\Debug\StudentMangementSystemEasyx.pdb
+D:\dwy\git\sys\Visual Studio\programming-homework-master\programming-homework-master\StudentMangementSystemEasyx\Debug\StudentMangementSystemEasyx.exe

@@ -1,3 +1,6 @@
 D:\Program Files\VSspace\Calculator1\Calculator1\x64\Debug\Calculator1.vcxproj.AssemblyReference.cache
 D:\Program Files\VSspace\Calculator1\Calculator1\x64\Debug\Calculator1.MyForm.resources
 D:\Program Files\VSspace\Calculator1\Calculator1\x64\Debug\Calculator1.vcxproj.GenerateResource.cache
+D:\dwy\git\sys\Visual Studio\Calculator1\Calculator1\x64\Debug\Calculator1.vcxproj.AssemblyReference.cache
+D:\dwy\git\sys\Visual Studio\Calculator1\Calculator1\x64\Debug\Calculator1.MyForm.resources
+D:\dwy\git\sys\Visual Studio\Calculator1\Calculator1\x64\Debug\Calculator1.vcxproj.GenerateResource.cache
